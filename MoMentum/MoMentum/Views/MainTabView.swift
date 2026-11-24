@@ -36,6 +36,7 @@ struct MainTabView: View {
         .fullScreenCover(item: $recordingRequest) { request in
             RecordingView(context: request.context)
         }
+        .environment(\.openSettings, OpenSettingsAction { selection = .settings })
     }
 }
 

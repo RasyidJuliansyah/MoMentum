@@ -38,6 +38,33 @@ Menyusul dari sesi logic (nama final, belum ada isinya):
 - `AudioRecorder` — `@Observable`, expose state rekam/jeda/durasi/level audio untuk `WaveformView`
 - `SummaryProvider` — protocol adapter LLM, sepadan pola `TranscriptionProvider`
 
+### 3a. Data yang dibutuhkan UI dari sesi Logic
+
+Ditambahkan sesi UI, 24 Nov 2026. Layar di bawah sudah dibangun dengan data sementara. Begitu item ini tersedia, UI tinggal menyambungkan. Nama field boleh berbeda, asal isinya sama; kabari kalau beda.
+
+**`AudioRecorder` → layar 02, 14, 15.** UI membaca satu struct `RecordingSnapshot` (`Views/Recording/RecordingSnapshot.swift`):
+
+| Data | Bentuk | Dipakai untuk |
+| --- | --- | --- |
+| Judul, agenda | `String`, `String?` | Header layar rekam |
+| Fase | merekam / dijeda oleh user / dijeda karena telepon | Titik status, tombol Jeda/Lanjut, banner layar 14 |
+| Durasi audio | `TimeInterval`, jeda tidak dihitung | Timer `01:12:48` |
+| Nomor segmen | `Int`, mulai dari 1 | "Segmen 5" |
+| Level audio | `[Double]` 0...1, terbaru di akhir, ±5 per detik | Waveform |
+| Penanda momen | `[TimeInterval]` dalam waktu audio | Chip "Momen ditandai" |
+| Sisa ruang | jam rekaman (`Int?`) + flag hampir penuh | Teks bawah layar, banner layar 15 |
+
+Aksi yang dipanggil UI: mulai (dengan judul, agenda, istilah), tandai, jeda, lanjut, simpan (konteks final + proses sekarang atau tidak).
+
+**Perilaku Stop:** tombol Stop di UI hanya menjeda lalu membuka sheet 03. Rekaman baru ditutup saat user menekan Simpan. Batal di sheet kembali ke layar rekam dalam keadaan dijeda, jadi rekaman tidak boleh dibuang di titik ini.
+
+**`Meeting` dan `MeetingProcessor` → Riwayat 04, Memproses 05, Proses gagal 13:**
+- Langkah proses saat ini (PLAN-logic L1.2) dan perkiraan progres 0...1, untuk bar di kartu dan ring di layar 05. Urutan langkah di UI: rekaman tersimpan → segmen terunggah → transkripsi & pemisahan speaker → penyamaan label speaker → ringkasan, action items & MoM.
+- Jenis dan pesan error terakhir (L1.2). Jenis "API key tidak valid" menonjolkan tombol "Cek API key" di layar 13.
+- `process(_:)` dan `retry(_:)` (L6.3), untuk tombol "Simpan & proses" dan "Coba lagi".
+- Agenda dan istilah khusus di `Meeting` (L1.1). UI mengisinya dari `MeetingContextDraft` (`title`, `agenda`, `terms`).
+- Pemutar audio untuk tombol putar di sheet 03. Belum ada di PLAN-logic.
+
 ## 4. Status progres
 
 | Item | Status |
@@ -51,7 +78,7 @@ Menyusul dari sesi logic (nama final, belum ada isinya):
 | Penyatuan label speaker antarsegmen | Belum |
 | `SummaryProvider` (LLM) | Belum |
 | Queue offline + retry | Belum |
-| `Views/`, `DesignSystem/` | Belum (sesi UI) |
+| `Views/`, `DesignSystem/` | Berjalan (sesi UI, branch `feat/ui-design-system`). Selesai dengan data sementara: DesignSystem, Beranda 01, Merekam 02/14/15, Simpan 03, Riwayat 04/12, Memproses 05, Proses gagal 13 |
 
 Update tabel ini manual tiap ada item selesai — bukan otomatis.
 

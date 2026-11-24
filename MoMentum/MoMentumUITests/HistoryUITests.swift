@@ -36,6 +36,24 @@ final class HistoryUITests: XCTestCase {
 
         sprint.tap()
         XCTAssertTrue(app.staticTexts["Proses gagal"].waitForExistence(timeout: 5))
+        attach(app, "13-proses-gagal")
+
+        app.buttons["Cek API key"].tap()
+        XCTAssertTrue(app.tabBars.buttons["Pengaturan"].isSelected, "Cek API key harus pindah ke tab Pengaturan")
+    }
+
+    @MainActor
+    func testProcessingMeetingOpensProcessingScreen() throws {
+        let app = launch(seed: "sample")
+        app.tabBars.buttons["Riwayat"].tap()
+
+        let weekly = card(app, "Weekly Sync Product")
+        XCTAssertTrue(weekly.waitForExistence(timeout: 5))
+        weekly.tap()
+
+        XCTAssertTrue(app.staticTexts["Ringkasan, action items & MoM"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Biarkan app terbuka"].exists)
+        attach(app, "05-memproses")
     }
 
     @MainActor

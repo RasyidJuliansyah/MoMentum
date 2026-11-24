@@ -36,7 +36,8 @@ struct HistorySection: Identifiable {
 }
 
 enum HistoryGrouping {
-    /// Saring lalu kelompokkan: HARI INI, MINGGU INI, BULAN INI, lalu per bulan ("OKTOBER 2026").
+    /// Saring lalu kelompokkan: HARI INI, 7 HARI TERAKHIR, BULAN INI, lalu per bulan ("OKTOBER 2026").
+    /// "7 HARI TERAKHIR" memakai minggu kalender Senin–Minggu (keputusan pemilik produk, 24 Nov 2026).
     /// Urutan meeting di dalam tiap kelompok mengikuti urutan input (terbaru dulu).
     static func sections(
         for meetings: [Meeting],
@@ -68,7 +69,7 @@ enum HistoryGrouping {
             return "HARI INI"
         }
         if calendar.isDate(date, equalTo: now, toGranularity: .weekOfYear) {
-            return "MINGGU INI"
+            return "7 HARI TERAKHIR"
         }
         if calendar.isDate(date, equalTo: now, toGranularity: .month) {
             return "BULAN INI"

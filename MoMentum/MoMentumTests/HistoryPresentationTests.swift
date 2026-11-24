@@ -80,7 +80,7 @@ final class HistoryPresentationTests: XCTestCase {
             meeting("Oktober", day: 15, month: 10, status: .failed),
         ]
         let sections = HistoryGrouping.sections(for: meetings, now: now, calendar: calendar)
-        XCTAssertEqual(sections.map(\.title), ["HARI INI", "MINGGU INI", "BULAN INI", "OKTOBER 2026"])
+        XCTAssertEqual(sections.map(\.title), ["HARI INI", "7 HARI TERAKHIR", "BULAN INI", "OKTOBER 2026"])
         XCTAssertEqual(sections.map { $0.meetings.map(\.title) }, [["Hari ini"], ["Senin"], ["Awal bulan"], ["Oktober"]])
     }
 
