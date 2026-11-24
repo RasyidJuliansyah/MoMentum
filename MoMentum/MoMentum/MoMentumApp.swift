@@ -29,6 +29,7 @@ struct MoMentumApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(AudioRecorder(modelContext: sharedModelContainer.mainContext))
         }
         .modelContainer(sharedModelContainer)
     }

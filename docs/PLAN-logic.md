@@ -75,14 +75,14 @@ L1 (model lengkap). UI sedang menunggu field ini untuk layar 02, 03, 05, 07, 09,
 
 | # | Keputusan | Dibutuhkan sebelum | Usulan | Status |
 | --- | --- | --- | --- | --- |
-| D1 | Deployment target: tetap 27.2 atau turun ke 26.0 (desain menargetkan iOS 26)? Tergantung versi iOS di iPhone yang dipakai | L2 | Ikuti versi iOS iPhone pribadi | belum diputuskan |
+| D1 | Deployment target: tetap 27.2 atau turun ke 26.0 (desain menargetkan iOS 26)? Tergantung versi iOS di iPhone yang dipakai | L2 | Ikuti versi iOS iPhone pribadi | **Diputuskan 24 Nov 2026: 26.0** (pemilik produk: iPhone 11 di iOS 26.0, sudah dikerjakan di commit `8edf534`) |
 | D2 | Cara menyamakan label speaker untuk meeting panjang | L1 | **A**: segmen tetap disimpan terpisah di HP (tahan crash), tapi digabung jadi satu file sebelum upload. AssemblyAI menerima sampai 10 jam / 5GB per transkrip dan upload lokal sampai 2,2GB ([FAQ AssemblyAI](https://www.assemblyai.com/docs/faq/are-there-any-limits-on-file-size-or-file-duration-for-files-submitted-to-the-api), dicek 24 Nov 2026). Dengan satu kali diarization, label otomatis konsisten. **B** (cadangan): kirim per segmen lalu cocokkan label lewat potongan audio yang tumpang tindih. Jauh lebih rumit. Pilihan A mengubah alur langkah 2 di `docs/architecture.md`, jadi dokumen itu perlu diperbarui | **Diputuskan 24 Nov 2026: A** (pemilik produk: "satu kesatuan full"). |
 | D3 | Tempat menyimpan nama speaker | L1 | Model baru `Speaker` (label, nama opsional) milik `Meeting`. `Utterance.speakerLabel` tetap label mentah, sedangkan nama tampil diambil dari `Speaker`. Ganti nama cukup mengubah satu field | **Diputuskan 24 Nov 2026: usulan dipakai apa adanya** |
 | D4 | Vendor dan model LLM untuk ringkasan. Penyebutan Anthropic di desain hanya contoh isi layar | L5 | — | belum diputuskan |
 | D5 | Rekaman audio disimpan berapa lama setelah MoM jadi (open question di PRD) | L7 | — | belum diputuskan |
 | D6 | Hapus transkrip di server AssemblyAI setelah hasil tersimpan lokal? | L7 | — | belum diputuskan |
 | D7 | Batas biaya API per bulan (open question di PRD) | L7 | — | belum diputuskan |
-| D8 | `AVAudioRecorder` atau `AVAudioEngine` untuk perekam, plus format dan bitrate audio | L2 | Diputuskan di L2.1 setelah uji kecil di perangkat | belum diputuskan |
+| D8 | `AVAudioRecorder` atau `AVAudioEngine` untuk perekam, plus format dan bitrate audio | L2 | Diputuskan di L2.1 setelah uji kecil di perangkat | **Diputuskan 24 Nov 2026: A, `AVAudioRecorder` per segmen**, format AAC mono 64 kbps. Celah mikro antar segmen diterima (dampak ke transkrip minimal) demi kesederhanaan kode; upgrade ke `AVAudioEngine` kalau uji perangkat nunjukin celah memotong kata penting. Uji fisik lengkap (bagian "Uji di perangkat setelah L2") belum dijalankan — dicatat sebagai risiko diterima, bukan diverifikasi. |
 | D9 | Proses cloud tetap jalan saat app di background (background `URLSession`)? | L6 | Ya, masuk PRD sebagai requirement S: "Proses di background" dan "Notifikasi MoM siap". Upload lewat background `URLSession`, lanjutan proses lewat `BGTaskScheduler`, notifikasi lokal saat MoM siap. Waktu dari iOS tidak bisa dijamin tanpa backend | **Diputuskan 24 Nov 2026** |
 
 ### Yang tidak boleh diubah
@@ -115,7 +115,7 @@ Satu tugas per giliran. Centang setelah tes lolos dan sudah di-commit. Branch pe
 
   Uji kecil di iPhone: segmen 60 detik, layar dikunci, 3 kali pergantian segmen. Catat juga format dan bitrate. Sebagai acuan, AAC mono 64 kbps sekitar 29 MB per jam. File `.m4a` yang tidak ditutup rapi saat crash biasanya tidak bisa diputar, jadi uji apa yang terjadi pada segmen yang sedang ditulis.
   Selesai kalau: pilihan dicatat di bagian "Catatan" di bawah.
-- [ ] **L2.2 Perekam inti.** `@Observable final class AudioRecorder` dengan state `idle`, `recording`, `paused(reason)`, dan `finished`. Expose juga durasi audio, level untuk `WaveformView`, `mark()` untuk tombol Tandai, dan `stop()`. `Meeting` dibuat saat mulai rekam dengan `endedAt = nil`. Tiap segmen yang selesai langsung ditulis sebagai `Segment`. Durasi segmen dikirim lewat `init`, dengan default `RecordingConstants.segmentDuration`, supaya tes bisa memakai durasi pendek.
+- [x] **L2.2 Perekam inti.** `@Observable final class AudioRecorder` dengan state `idle`, `recording`, `paused(reason)`, dan `finished`. Expose juga durasi audio, level untuk `WaveformView`, `mark()` untuk tombol Tandai, dan `stop()`. `Meeting` dibuat saat mulai rekam dengan `endedAt = nil`. Tiap segmen yang selesai langsung ditulis sebagai `Segment`. Durasi segmen dikirim lewat `init`, dengan default `RecordingConstants.segmentDuration`, supaya tes bisa memakai durasi pendek.
   Selesai kalau: ada tes transisi state, tes pergantian segmen dengan durasi pendek, dan tes penanda tersimpan dalam waktu audio.
 - [ ] **L2.3 Gangguan.**
   - `AVAudioSession.interruptionNotification`: saat mulai, jeda dengan alasan `.phoneCall` dan tutup segmen berjalan. Saat selesai, lanjutkan otomatis kalau ada `.shouldResume`. Kalau tidak ada, tetap jeda (layar 14 punya tombol lanjut).

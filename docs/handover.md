@@ -97,7 +97,7 @@ Aksi yang dipanggil UI: mulai (dengan judul, agenda, istilah), tandai, jeda, lan
 | `TranscriptionProvider` protocol | Selesai (skeleton, belum ada implementasi AssemblyAI) |
 | `KeychainStore` | Selesai, ada test |
 | `RecordingConstants` | Selesai |
-| `AudioRecorder` | Belum |
+| `AudioRecorder` (L2.2, D8 = A `AVAudioRecorder`) | Selesai: state `idle/recording/paused(reason)/finished`, `elapsed`, `segmentNumber`, `levels`, `markers`, `mark()`, `pause()/resume()`, `stop()`. `Meeting`/`Segment` ditulis langsung lewat `ModelContext` yang dikirim di `init`. UI tinggal baca properti ini untuk `RecordingSnapshot` |
 | Implementasi AssemblyAI di `TranscriptionProvider` | Belum |
 | Penyatuan label speaker antarsegmen | Belum |
 | `SummaryProvider` (LLM) | Belum |
