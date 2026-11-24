@@ -20,6 +20,17 @@ enum MFormat {
         return String(format: "%02d:%02d:%02d", total / 3600, (total % 3600) / 60, total % 60)
     }
 
+    /// Ukuran penyimpanan gaya iOS (1 GB = 1.000.000.000 byte) dengan koma desimal: "1,2 GB", "412 MB".
+    static func storage(_ bytes: Int64) -> String {
+        let indonesian = Locale(identifier: "id_ID")
+        let gigabytes = Double(max(0, bytes)) / 1_000_000_000
+        if gigabytes >= 1 {
+            return gigabytes.formatted(.number.precision(.fractionLength(1)).locale(indonesian)) + " GB"
+        }
+        let megabytes = Double(max(0, bytes)) / 1_000_000
+        return megabytes.formatted(.number.precision(.fractionLength(0)).locale(indonesian)) + " MB"
+    }
+
     /// Kalimat untuk VoiceOver, misalnya "1 jam 12 menit 48 detik".
     static func spokenDuration(_ seconds: TimeInterval) -> String {
         let total = max(0, Int(seconds))

@@ -15,7 +15,7 @@ final class HistoryUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Belum ada meeting"].waitForExistence(timeout: 5))
         attach(app, "12-riwayat-kosong")
 
-        app.buttons["Mulai merekam"].tap()
+        app.buttons["Mulai rekam"].tap()
         XCTAssertTrue(app.buttons["Stop"].waitForExistence(timeout: 5), "Tombol di state kosong harus membuka layar rekam")
     }
 
@@ -35,7 +35,8 @@ final class HistoryUITests: XCTestCase {
         attach(app, "04-riwayat-gagal")
 
         sprint.tap()
-        XCTAssertTrue(app.staticTexts["Proses gagal"].waitForExistence(timeout: 5))
+        XCTAssertTrue(element(app, startingWith: "Transkripsi berhenti di segmen 7").waitForExistence(timeout: 5))
+        XCTAssertTrue(element(app, startingWith: "Status segmen: 6 selesai, 1 gagal, 4 menunggu").exists)
         attach(app, "13-proses-gagal")
 
         app.buttons["Cek API key"].tap()
@@ -51,9 +52,14 @@ final class HistoryUITests: XCTestCase {
         XCTAssertTrue(weekly.waitForExistence(timeout: 5))
         weekly.tap()
 
-        XCTAssertTrue(app.staticTexts["Ringkasan, action items & MoM"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Biarkan app terbuka"].exists)
+        XCTAssertTrue(element(app, startingWith: "Ringkasan, action items & MoM").waitForExistence(timeout: 5))
+        XCTAssertTrue(element(app, startingWith: "Biarkan app terbuka").exists)
         attach(app, "05-memproses")
+    }
+
+    @MainActor
+    private func element(_ app: XCUIApplication, startingWith text: String) -> XCUIElement {
+        app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", text)).firstMatch
     }
 
     @MainActor

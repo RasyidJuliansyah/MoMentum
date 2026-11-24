@@ -49,15 +49,15 @@ struct RecordingScreen: View {
         if snapshot.phase == .paused(.phoneCall) {
             StatusBanner(
                 kind: .warning,
-                systemImage: "phone.fill",
+                systemImage: "pause.fill",
                 title: "Dijeda karena telepon masuk",
-                message: "Bagian yang sudah terekam aman. Ketuk Lanjut kalau rekaman belum jalan lagi setelah telepon selesai."
+                message: "Rekaman lanjut otomatis setelah panggilan selesai."
             )
         } else if snapshot.isStorageLow {
             StatusBanner(
                 kind: .danger,
                 systemImage: "exclamationmark.triangle.fill",
-                title: "Ruang penyimpanan hampir penuh",
+                title: storageTitle,
                 message: storageMessage
             )
         } else {
@@ -70,11 +70,18 @@ struct RecordingScreen: View {
         }
     }
 
+    private var storageTitle: String {
+        if let bytes = snapshot.storageRemainingBytes {
+            return "Ruang penyimpanan tinggal \(MFormat.storage(bytes))"
+        }
+        return "Ruang penyimpanan hampir penuh"
+    }
+
     private var storageMessage: String {
         if let hours = snapshot.storageRemainingHours, hours > 0 {
-            return "Sisa ruang cukup untuk ± \(hours) jam lagi. Hapus file lain supaya rekaman tidak terhenti."
+            return "Cukup untuk sekitar \(hours) jam lagi. Hapus audio lama di Pengaturan."
         }
-        return "Sisa ruang kurang dari 1 jam rekaman. Hapus file lain supaya rekaman tidak terhenti."
+        return "Cukup untuk kurang dari 1 jam lagi. Hapus audio lama di Pengaturan."
     }
 
     private var titleBlock: some View {
@@ -145,7 +152,7 @@ struct RecordingScreen: View {
     private var footer: some View {
         VStack(spacing: MSpace.sm) {
             if let hours = snapshot.storageRemainingHours {
-                Text("Disimpan lokal di iPhone · sisa ruang ± \(hours) jam")
+                Text(snapshot.isStorageLow ? "Sisa ruang ± \(hours) jam" : "Disimpan lokal di iPhone · sisa ruang ± \(hours) jam")
                     .font(.caption)
                     .foregroundStyle(MColor.n0.opacity(0.8))
             }
@@ -172,6 +179,7 @@ struct RecordingScreen: View {
 #Preview("15 · Ruang hampir penuh") {
     var snapshot = RecordingSnapshot.preview
     snapshot.isStorageLow = true
-    snapshot.storageRemainingHours = 0
+    snapshot.storageRemainingHours = 9
+    snapshot.storageRemainingBytes = 1_200_000_000
     return RecordingScreen(snapshot: snapshot)
 }

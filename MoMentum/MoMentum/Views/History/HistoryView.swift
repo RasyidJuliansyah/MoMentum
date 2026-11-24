@@ -16,9 +16,10 @@ struct HistoryView: View {
                     HistoryEmptyView(onStartRecording: onStartRecording)
                 } else {
                     meetingList
-                        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Cari kata di semua meeting")
                 }
             }
+            // Figma menampilkan kolom cari juga saat kosong (layar 12).
+            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Cari kata di semua meeting")
             .navigationTitle("Riwayat")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

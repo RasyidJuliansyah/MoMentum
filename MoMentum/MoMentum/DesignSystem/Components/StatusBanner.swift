@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Banner status (Figma: Banner di layar 14 dan 15). Kartu putih, ikon dalam lingkaran berwarna, judul + keterangan.
+/// Banner status (Figma: Banner di layar 14 dan 15). Kartu putih, ikon putih dalam lingkaran berwarna solid,
+/// judul + keterangan.
 struct StatusBanner: View {
     enum Kind {
         case info
@@ -25,9 +26,9 @@ struct StatusBanner: View {
         HStack(alignment: .top, spacing: MSpace.sm) {
             Image(systemName: systemImage)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(kind.colors.fg)
+                .foregroundStyle(MColor.n0)
                 .frame(width: 36, height: 36)
-                .background(kind.colors.bg, in: .circle)
+                .background(kind.colors.fg, in: .circle)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.subheadline.weight(.semibold))
@@ -40,8 +41,8 @@ struct StatusBanner: View {
             Spacer(minLength: 0)
         }
         .padding(14)
-        .background(MColor.n0, in: .rect(cornerRadius: MRadius.md))
-        .shadow(color: MColor.brand900.opacity(0.06), radius: 12, y: 4)
+        .background(MColor.n0, in: .rect(cornerRadius: 20))
+        .shadow(color: MColor.brand900.opacity(0.08), radius: 14, y: 6)
         .accessibilityElement(children: .combine)
     }
 }

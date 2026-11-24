@@ -52,7 +52,7 @@ Ditambahkan sesi UI, 24 Nov 2026. Layar di bawah sudah dibangun dengan data seme
 | Nomor segmen | `Int`, mulai dari 1 | "Segmen 5" |
 | Level audio | `[Double]` 0...1, terbaru di akhir, ±5 per detik | Waveform |
 | Penanda momen | `[TimeInterval]` dalam waktu audio | Chip "Momen ditandai" |
-| Sisa ruang | jam rekaman (`Int?`) + flag hampir penuh | Teks bawah layar, banner layar 15 |
+| Sisa ruang | jam rekaman (`Int?`), byte (`Int64?`), flag hampir penuh | Teks bawah layar, banner layar 15 ("tinggal 1,2 GB · cukup ± 9 jam") |
 
 Aksi yang dipanggil UI: mulai (dengan judul, agenda, istilah), tandai, jeda, lanjut, simpan (konteks final + proses sekarang atau tidak).
 
@@ -64,6 +64,9 @@ Aksi yang dipanggil UI: mulai (dengan judul, agenda, istilah), tandai, jeda, lan
 - `process(_:)` dan `retry(_:)` (L6.3), untuk tombol "Simpan & proses" dan "Coba lagi".
 - Agenda dan istilah khusus di `Meeting` (L1.1). UI mengisinya dari `MeetingContextDraft` (`title`, `agenda`, `terms`).
 - Pemutar audio untuk tombol putar di sheet 03. Belum ada di PLAN-logic.
+- Status per segmen untuk grid layar 13 (selesai, gagal, menunggu). Saat ini UI memakai `Segment.transcribed` dan menganggap segmen pertama yang belum selesai sebagai tempat gagal. Kalau D2 = A (gabung jadi satu file sebelum upload), grid ini perlu diganti; kabari sesi UI.
+- Ukuran file per segmen dan jumlah segmen yang sudah terunggah, untuk keterangan langkah di layar 05 ("8 segmen · 412 MB di iPhone", "8/8 ke layanan STT").
+- Desain layar 05 menulis "App boleh ditutup. Proses tetap jalan dan kamu dapat notifikasi saat MoM siap." UI belum memakai kalimat itu sampai D9 (proses di background) dan notifikasi diputuskan.
 
 ## 4. Status progres
 

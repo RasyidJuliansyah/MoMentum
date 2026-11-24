@@ -1,7 +1,6 @@
 import SwiftUI
 
 /// Tampilan layar 05 Memproses (Figma node 14:374) dan 13 Proses gagal (node 18:598).
-/// Dibangun dari spesifikasi design-handoff.md; cocokkan ulang ke Figma setelah akses desain pulih.
 struct ProcessingScreen: View {
     let content: ProcessingContent
     var onRetry: () -> Void = {}
@@ -10,15 +9,13 @@ struct ProcessingScreen: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: MSpace.lg) {
-                header
+            VStack(spacing: 20) {
                 if content.isFailed {
-                    failureHero
+                    failedBody
                 } else {
-                    progressHero
+                    progressBody
                 }
-                ProcessingStepList(steps: content.steps)
-                notice
+                note
             }
             .padding(.horizontal, MSpace.screen)
             .padding(.bottom, MSpace.lg)
@@ -28,95 +25,122 @@ struct ProcessingScreen: View {
                 .padding(.horizontal, MSpace.screen)
                 .padding(.bottom, MSpace.xs)
         }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                StatusBadge(status: content.status)
+            }
+            .sharedBackgroundVisibility(.hidden)
+        }
         .screenBackground(MBackground.light)
     }
 
-    private var header: some View {
-        VStack(spacing: 4) {
-            Text(content.title)
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(MColor.n900)
-                .multilineTextAlignment(.center)
-            Text(content.meta)
-                .font(.footnote)
-                .foregroundStyle(MColor.n600)
-        }
-        .padding(.top, MSpace.xs)
-    }
+    // MARK: 05 Memproses
 
-    private var progressHero: some View {
-        ZStack {
-            ProgressRing(progress: content.progress)
-            VStack(spacing: 2) {
-                if let percent = content.percentText {
-                    Text(percent)
-                        .font(.largeTitle.weight(.semibold))
-                        .monospacedDigit()
-                        .foregroundStyle(MColor.n900)
-                } else {
-                    Image(systemName: "sparkles")
-                        .font(.title.weight(.semibold))
-                        .foregroundStyle(MColor.brand700)
-                }
-                Text(content.status == .processing ? "Diproses" : content.status.label)
+    private var progressBody: some View {
+        VStack(spacing: 20) {
+            VStack(spacing: 4) {
+                Text(content.title)
+                    .font(.title2.bold())
+                    .foregroundStyle(MColor.n900)
+                    .multilineTextAlignment(.center)
+                Text(content.meta)
                     .font(.footnote)
                     .foregroundStyle(MColor.n600)
             }
-            .accessibilityHidden(true)
+
+            ZStack {
+                Circle()
+                    .fill(MColor.n0.opacity(0.55))
+                    .frame(width: 200, height: 200)
+                    .shadow(color: MColor.brand900.opacity(0.06), radius: 20, y: 8)
+                ProgressRing(progress: content.progress)
+                    .frame(width: 168, height: 168)
+                VStack(spacing: 2) {
+                    if let percent = content.percentText {
+                        Text(percent)
+                            .font(.system(size: 44, weight: .semibold))
+                            .monospacedDigit()
+                            .foregroundStyle(MColor.n900)
+                    } else {
+                        Image(systemName: "sparkles")
+                            .font(.title.weight(.semibold))
+                            .foregroundStyle(MColor.brand700)
+                    }
+                    Text(content.stepCounterText ?? content.status.label)
+                        .font(.footnote)
+                        .foregroundStyle(MColor.n600)
+                }
+                .accessibilityHidden(true)
+            }
+
+            ProcessingStepList(steps: content.steps)
         }
-        .frame(width: 168, height: 168)
-        .padding(.vertical, MSpace.xs)
     }
 
-    private var failureHero: some View {
-        VStack(spacing: MSpace.sm) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 34, weight: .semibold))
-                .foregroundStyle(MColor.danger)
-                .frame(width: 96, height: 96)
-                .background(MColor.dangerBg, in: .circle)
-                .accessibilityHidden(true)
-            Text("Proses gagal")
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(MColor.n900)
-            Text(content.errorMessage ?? "Ada kendala saat memproses meeting ini.")
-                .font(.subheadline)
-                .foregroundStyle(MColor.n600)
-                .multilineTextAlignment(.center)
+    // MARK: 13 Proses gagal
+
+    private var failedBody: some View {
+        VStack(alignment: .leading, spacing: MSpace.md) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(content.title)
+                    .font(.title.bold())
+                    .foregroundStyle(MColor.n900)
+                Text(content.meta)
+                    .font(.footnote)
+                    .foregroundStyle(MColor.n600)
+            }
+
+            errorCard
+
+            if content.segments.isEmpty {
+                ProcessingStepList(steps: content.steps)
+            } else {
+                SegmentStatusGrid(segments: content.segments)
+            }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
+
+    private var errorCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(MColor.n0)
+                    .frame(width: 28, height: 28)
+                    .background(MColor.danger, in: .circle)
+                Text(content.errorTitle ?? "Proses gagal")
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(MColor.danger)
+            }
+            if let message = content.errorMessage {
+                Text(message)
+                    .font(.subheadline)
+                    .foregroundStyle(MColor.n900)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(MSpace.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(MColor.dangerBg, in: .rect(cornerRadius: 20))
+        .accessibilityElement(children: .combine)
+    }
+
+    // MARK: Catatan dan tombol
 
     @ViewBuilder
-    private var notice: some View {
+    private var note: some View {
         switch content.status {
         case .failed:
-            StatusBanner(
-                kind: .info,
-                systemImage: "lock.fill",
-                title: "Rekaman tetap aman",
-                message: "Audio masih tersimpan di iPhone. Coba lagi tidak perlu merekam ulang."
-            )
+            NoteBox(systemImage: "checkmark", text: content.retryNote)
         case .queued:
-            StatusBanner(
-                kind: .warning,
-                systemImage: "wifi.slash",
-                title: "Menunggu internet",
-                message: "Meeting ini diproses otomatis begitu iPhone online."
-            )
+            NoteBox(systemImage: "wifi.slash", text: "Menunggu internet. Meeting ini diproses otomatis begitu iPhone online.")
         case .recorded:
-            StatusBanner(
-                kind: .info,
-                systemImage: "tray",
-                title: "Belum diproses",
-                message: "Proses otomatis dimatikan saat menyimpan. Ketuk Proses sekarang untuk mulai."
-            )
+            NoteBox(systemImage: "tray", text: "Belum diproses. Ketuk Proses sekarang untuk mulai.")
         case .processing:
-            StatusBanner(
-                kind: .info,
-                systemImage: "info.circle.fill",
-                title: "Biarkan app terbuka",
-                message: "Kalau app ditutup, proses lanjut saat app dibuka lagi."
-            )
+            // Figma: "App boleh ditutup. Proses tetap jalan dan kamu dapat notifikasi saat MoM siap."
+            // Belum dipakai: proses di background dan notifikasi belum direncanakan (PLAN-logic D9).
+            NoteBox(systemImage: "info.circle", text: "Biarkan app terbuka sampai selesai. Kalau ditutup, proses lanjut saat app dibuka lagi.")
         case .done:
             EmptyView()
         }
@@ -132,7 +156,7 @@ struct ProcessingScreen: View {
                 }
                 .buttonStyle(.secondaryCapsule)
                 Button(action: onRetry) {
-                    Label("Coba lagi", systemImage: "arrow.clockwise")
+                    Label("Coba lagi", systemImage: "arrow.triangle.2.circlepath")
                 }
                 .buttonStyle(.primaryCapsule)
             }

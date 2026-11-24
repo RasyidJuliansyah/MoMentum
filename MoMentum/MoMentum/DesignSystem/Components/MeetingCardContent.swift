@@ -43,9 +43,13 @@ struct MeetingCardContent: Equatable {
     }
 
     /// "24 Nov · 1j 58m · 8 segmen" untuk yang belum selesai, "21 Nov · 2j 14m · 3 action items" untuk yang selesai.
-    static func meta(for meeting: Meeting) -> String {
+    /// Dengan `includeYear`: "24 Nov 2026 · …" (layar 05 dan 13).
+    static func meta(for meeting: Meeting, includeYear: Bool = false) -> String {
+        let dateStyle = includeYear
+            ? Date.FormatStyle.dateTime.day().month(.abbreviated).year()
+            : Date.FormatStyle.dateTime.day().month(.abbreviated)
         var parts = [
-            meeting.createdAt.formatted(.dateTime.day().month(.abbreviated).locale(Locale(identifier: "id_ID"))),
+            meeting.createdAt.formatted(dateStyle.locale(Locale(identifier: "id_ID"))),
             MFormat.duration(meeting.durationSeconds),
         ]
         if meeting.status == .done {

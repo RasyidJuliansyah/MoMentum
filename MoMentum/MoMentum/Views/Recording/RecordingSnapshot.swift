@@ -25,6 +25,8 @@ struct RecordingSnapshot: Equatable {
     var markers: [TimeInterval] = []
     /// Perkiraan sisa ruang dalam jam rekaman. `nil` kalau belum diketahui.
     var storageRemainingHours: Int?
+    /// Sisa ruang dalam byte, untuk banner layar 15 ("tinggal 1,2 GB").
+    var storageRemainingBytes: Int64?
     var isStorageLow = false
 
     var isRecording: Bool { phase == .recording }
