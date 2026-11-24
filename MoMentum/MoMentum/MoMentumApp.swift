@@ -41,6 +41,11 @@ struct MoMentumApp: App {
             )
         )
         meetingProcessor = processor
+        // D5: retensi 30 hari default (lihat AppStorageKey.audioRetentionDays, wilayah UI).
+        // Kunci dibaca langsung di sini karena belum ada constant bersama; kalau sesi UI
+        // mengubah nama kunci, sesuaikan string di bawah.
+        let retentionDays = UserDefaults.standard.object(forKey: "audioRetentionDays") as? Int ?? 30
+        AudioRetentionCleaner.deleteExpiredAudio(in: context, retentionDays: retentionDays)
         // L6.2: lanjutan proses dibangunkan iOS lewat BGTaskScheduler (D9). Harus didaftarkan
         // sebelum scene muncul (dokumentasi Apple), jadi di sini, bukan di `.task` view.
         BackgroundTaskCoordinator.registerBackgroundTask {

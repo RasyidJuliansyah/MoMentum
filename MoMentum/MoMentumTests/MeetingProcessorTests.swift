@@ -96,6 +96,24 @@ final class MeetingProcessorTests: XCTestCase {
         XCTAssertNotNil(meeting.processedAt)
     }
 
+    // MARK: - D6: hapus transkrip di vendor setelah tersimpan lokal
+
+    func testDeleteTranscriptCalledAfterSuccessfulTranscription() async throws {
+        let context = try makeInMemoryContext()
+        let meeting = try makeMeetingWithSegment(in: context, title: "Daily Standup")
+
+        let transcription = FakeTranscriptionProvider(submitResult: .success("job-1"), pollResult: .success(
+            TranscriptResult(provider: "fake", utterances: [TranscribedUtterance(speakerLabel: "A", startMs: 0, endMs: 500, text: "halo")])
+        ))
+        let summary = FakeSummaryProvider(result: .success(SummaryResult(summaryText: "", topics: [], decisions: [], actionItems: [])))
+        let processor = MeetingProcessor(modelContext: context, transcriptionProvider: transcription, summaryProvider: summary, notifier: { _, _ in })
+
+        processor.process(meeting)
+        await waitUntil { meeting.status == .done }
+
+        XCTAssertEqual(transcription.deleteCallCount, 1)
+    }
+
     // MARK: - Gagal -> .failed dengan jenis error benar
 
     func testVendorErrorDuringTranscriptionMarksFailedWithVendorKind() async throws {
@@ -199,6 +217,11 @@ private final class FakeTranscriptionProvider: TranscriptionProvider {
 
     func pollUntilComplete(jobId: String) async throws -> TranscriptResult {
         try pollResult.get()
+    }
+
+    var deleteCallCount = 0
+    func deleteTranscript(jobId: String) async {
+        deleteCallCount += 1
     }
 }
 

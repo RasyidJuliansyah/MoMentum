@@ -138,7 +138,19 @@ final class AssemblyAITranscriptionProvider: TranscriptionProvider {
             else { return nil }
             return TranscribedUtterance(speakerLabel: speaker, startMs: start, endMs: end, text: text)
         }
-        return TranscriptResult(provider: "assemblyai", utterances: utterances)
+        // audio_duration: detik (Int/Double tergantung respons), dipakai catat pemakaian (L7, D7).
+        let audioDuration = (json["audio_duration"] as? Double) ?? (json["audio_duration"] as? Int).map(Double.init)
+        return TranscriptResult(provider: "assemblyai", utterances: utterances, audioDurationSeconds: audioDuration)
+    }
+
+    // MARK: - Hapus (D6)
+
+    func deleteTranscript(jobId: String) async {
+        guard let apiKey = apiKeyProvider(), !apiKey.isEmpty else { return }
+        var request = URLRequest(url: baseURL.appendingPathComponent("/v2/transcript/\(jobId)"))
+        request.httpMethod = "DELETE"
+        request.setValue(apiKey, forHTTPHeaderField: "authorization")
+        _ = try? await session.data(for: request)
     }
 
     // MARK: - Error mapping

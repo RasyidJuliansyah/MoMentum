@@ -16,6 +16,22 @@ struct SummaryResult: Sendable, Equatable {
     var topics: [String]
     var decisions: [String]
     var actionItems: [SummaryActionItem]
+    /// Token dari respons chat completions (`usage.prompt_tokens`/`completion_tokens`), untuk
+    /// catat pemakaian (L7, D7). `nil` kalau vendor tidak mengembalikan field `usage`.
+    var promptTokens: Int?
+    var completionTokens: Int?
+
+    init(
+        summaryText: String, topics: [String], decisions: [String], actionItems: [SummaryActionItem],
+        promptTokens: Int? = nil, completionTokens: Int? = nil
+    ) {
+        self.summaryText = summaryText
+        self.topics = topics
+        self.decisions = decisions
+        self.actionItems = actionItems
+        self.promptTokens = promptTokens
+        self.completionTokens = completionTokens
+    }
 }
 
 /// Input untuk `SummaryProvider`. Transkrip sudah pakai nama speaker (hasil `Meeting.displayName(for:)`),

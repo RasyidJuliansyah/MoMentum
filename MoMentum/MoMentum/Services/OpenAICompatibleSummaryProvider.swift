@@ -56,7 +56,9 @@ final class OpenAICompatibleSummaryProvider: SummaryProvider {
 
         try Self.checkResponse(response, data: data)
         let content = try Self.extractMessageContent(from: data)
-        return try Self.parseSummaryJSON(content)
+        var result = try Self.parseSummaryJSON(content)
+        (result.promptTokens, result.completionTokens) = Self.extractUsage(from: data)
+        return result
     }
 
     private static func checkResponse(_ response: URLResponse, data: Data) throws {
@@ -83,6 +85,15 @@ final class OpenAICompatibleSummaryProvider: SummaryProvider {
             throw SummaryError.invalidResponse("Respons chat completions tidak terbaca")
         }
         return content
+    }
+
+    /// `usage.prompt_tokens`/`completion_tokens`, field standar OpenAI-compatible (D7).
+    private static func extractUsage(from data: Data) -> (Int?, Int?) {
+        guard
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let usage = json["usage"] as? [String: Any]
+        else { return (nil, nil) }
+        return (usage["prompt_tokens"] as? Int, usage["completion_tokens"] as? Int)
     }
 
     private static func parseSummaryJSON(_ content: String) throws -> SummaryResult {

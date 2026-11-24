@@ -93,6 +93,21 @@ final class AssemblyAITranscriptionProviderTests: XCTestCase {
         }
     }
 
+    func testDeleteTranscriptSendsDeleteRequest() async throws {
+        var capturedMethod: String?
+        var capturedPath: String?
+        MockURLProtocol.requestHandler = { request in
+            capturedMethod = request.httpMethod
+            capturedPath = request.url?.path
+            return (200, Data())
+        }
+
+        await makeProvider().deleteTranscript(jobId: "job-123")
+
+        XCTAssertEqual(capturedMethod, "DELETE")
+        XCTAssertEqual(capturedPath, "/v2/transcript/job-123")
+    }
+
     func test401ResponseThrowsInvalidAPIKey() async throws {
         MockURLProtocol.requestHandler = { _ in
             (401, Data(#"{"error":"invalid api key"}"#.utf8))

@@ -14,6 +14,15 @@ struct TranscribedUtterance: Sendable, Equatable {
 struct TranscriptResult: Sendable, Equatable {
     var provider: String
     var utterances: [TranscribedUtterance]
+    /// Durasi audio dalam detik (dari `audio_duration` vendor), untuk catat pemakaian (L7, D7).
+    /// `nil` kalau vendor tidak mengembalikannya.
+    var audioDurationSeconds: Double?
+
+    init(provider: String, utterances: [TranscribedUtterance], audioDurationSeconds: Double? = nil) {
+        self.provider = provider
+        self.utterances = utterances
+        self.audioDurationSeconds = audioDurationSeconds
+    }
 }
 
 /// Opsi transkripsi (layar 03: agenda/istilah khusus). Semua opsional kecuali bahasa —
@@ -47,4 +56,7 @@ enum TranscriptionError: Error, Equatable {
 protocol TranscriptionProvider {
     func submit(audioFileURL: URL, options: TranscriptionOptions) async throws -> String
     func pollUntilComplete(jobId: String) async throws -> TranscriptResult
+    /// D6: hapus transkrip di server vendor setelah hasil tersimpan lokal. Gagal hapus (jaringan,
+    /// sudah terhapus, dll.) sengaja tidak melempar — bukan kegagalan proses meeting (L7).
+    func deleteTranscript(jobId: String) async
 }

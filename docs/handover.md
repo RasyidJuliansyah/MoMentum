@@ -46,6 +46,9 @@ Sudah ada (buatan sesi logic, pakai langsung):
 - `NetworkMonitor` (L6.2): `@Observable`, `isConnected: Bool`. Daftar di `.environment(...)` — `Services/NetworkMonitor.swift`
 - `Meeting.topics`/`decisions: [String]` (L6.1) — isi `MoMDocument(meeting:content:)` yang sebelumnya kosong (lihat `handover.md` 3a lama). `Meeting.processedAt: Date?` — "Diproses 21 Nov, 16:42" (layar 06)
 - `ActionItem.order: Int` dan `isDone: Bool` (L6.1) — urutan tampil dan checkbox layar 06
+- `MeetingProcessor.regenerateSummary(_ meeting:)` (L7) — tombol "Generate ulang" layar 06 / toggle sheet ganti nama speaker
+- `Meeting.transcriptionAudioSeconds`/`summaryPromptTokens`/`summaryCompletionTokens: Int?`/`Double?` (L7, D7) — untuk kartu "Biaya API" Pengaturan 09. Semua `nil` kalau vendor tidak mengembalikan datanya, bukan 0 — tampilkan "Belum tercatat" kalau nil, bukan "$0"
+- `AudioRetentionCleaner.deleteExpiredAudio(in:retentionDays:)` (L7, D5) — dipanggil otomatis saat app launch, tidak perlu dipanggil UI
 
 - `SummaryProvider` (D4, L5.1): `summarize(_ input: SummaryInput) async throws -> SummaryResult`. `SummaryInput` (meetingTitle, agenda, glossaryTerms, markerOffsetsMs, transcript pakai nama tampil speaker — bukan label mentah). `SummaryResult` (summaryText, actionItems: `[SummaryActionItem]` punya task/pic/dueDate, momMarkdown). `SummaryError` (`.missingAPIKey/.invalidAPIKey/.network/.vendor/.invalidResponse/.unknown`) — `Services/SummaryProvider.swift`
 - `OpenAICompatibleSummaryProvider` (L5.3) — implementasi generic "OpenAI-compatible chat completions" (D4: bukan vendor tunggal, lihat 3a di bawah soal field Base URL/model) — `Services/OpenAICompatibleSummaryProvider.swift`
@@ -122,7 +125,8 @@ Aksi yang dipanggil UI: mulai (dengan judul, agenda, istilah), tandai, jeda, lan
 | Penyatuan label speaker antarsegmen (`AudioMerger` L4.1, `SpeakerLabelNormalizer` L4.2) | Selesai, ada test. Uji kualitas rekaman nyata >2 jam (L4.3) belum — butuh pemilik produk |
 | `SummaryProvider` (LLM, D4 diputuskan generic OpenAI-compatible, L5.1-L5.4) | Selesai, ada test (6 kasus). Field Base URL/nama model di Settings 09 belum ditambah — wilayah sesi UI, lihat 3a |
 | `MeetingProcessor`, antrean offline, coba lagi (L6.1-L6.4) | Selesai, ada test (5 kasus). 3 kabel UI belum dipasang (tombol, progress ring, pemicu otomatis, notifikasi delegate) — lihat daftar di 3a |
-| Queue offline + retry | Belum |
+| Queue offline + retry | Selesai (bagian `MeetingProcessor`, lihat baris di atas) |
+| Generate ulang ringkasan, catat pemakaian, retensi audio, hapus data vendor (L7, D5/D6/D7) | Selesai, ada test (4+ kasus baru). Agregasi biaya bulanan ke USD belum dibuat — field mentah per meeting sudah ada |
 | `Views/`, `DesignSystem/` | Berjalan (sesi UI, branch `feat/ui-design-system`). Selesai dengan data sementara: DesignSystem, Beranda 01, Merekam 02/14/15, Simpan 03, Riwayat 04/12, Memproses 05, Proses gagal 13, Detail 06–08, Pengaturan 09, Onboarding 10–11. Semua layar Figma sudah dibangun; tinggal disambungkan ke service Logic (lihat 3a) |
 
 Update tabel ini manual tiap ada item selesai — bukan otomatis.

@@ -60,6 +60,13 @@ final class Meeting {
     /// Waktu proses (transkripsi+ringkasan) selesai — "Diproses 21 Nov, 16:42" (layar 06).
     var processedAt: Date?
 
+    // Pemakaian untuk kartu "Biaya API" di Pengaturan (L7, D7). Diisi `MeetingProcessor` setelah
+    // tiap langkah vendor selesai — token LLM dari respons chat completions (`usage.total_tokens`),
+    // bukan dihitung manual dari teks.
+    var transcriptionAudioSeconds: Double?
+    var summaryPromptTokens: Int?
+    var summaryCompletionTokens: Int?
+
     @Relationship(deleteRule: .cascade, inverse: \Segment.meeting)
     var segments: [Segment] = []
 

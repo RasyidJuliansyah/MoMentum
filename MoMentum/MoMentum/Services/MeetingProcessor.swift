@@ -33,6 +33,37 @@ final class MeetingProcessor {
         self.notifier = notifier
     }
 
+    // MARK: - Generate ulang ringkasan (L7, requirement S)
+
+    /// Dipakai tombol "Generate ulang" (layar 06) atau toggle di sheet ganti nama speaker.
+    /// Memakai transkrip (`Utterance`) yang SUDAH tersimpan lokal — tidak transkripsi ulang,
+    /// tidak upload ulang. Meeting harus sudah pernah selesai transkripsi (`processingStep`
+    /// minimal `.transcribing`), kalau belum tidak ada transkrip untuk diringkas.
+    func regenerateSummary(_ meeting: Meeting) {
+        guard meeting.processingStep == .transcribing || meeting.processingStep == .summarizing else { return }
+        let id = meeting.persistentModelID
+        guard activeMeetingID != id, !pendingQueue.contains(where: { $0.persistentModelID == id }) else { return }
+
+        meeting.status = .processing
+        if activeMeetingID == nil {
+            activeMeetingID = id
+            Task {
+                await BackgroundTaskCoordinator.withBackgroundTask {
+                    do {
+                        try await self.summarizeStep(meeting)
+                    } catch {
+                        self.handleFailure(meeting, error: error)
+                    }
+                }
+                self.activeMeetingID = nil
+                self.progressByMeetingID[id] = nil
+                self.advanceQueue()
+            }
+        } else {
+            pendingQueue.append(meeting)
+        }
+    }
+
     // MARK: - API untuk UI (L6.3)
 
     /// Dipanggil saat "Simpan & proses" ditekan, app diluncurkan/kembali ke depan dengan meeting
@@ -153,7 +184,11 @@ final class MeetingProcessor {
         }
 
         meeting.processingStep = .transcribing
+        meeting.transcriptionAudioSeconds = result.audioDurationSeconds
         progressByMeetingID[meeting.persistentModelID] = progress(for: .transcribing)
+
+        // D6: hasil sudah tersimpan lokal (Utterance di atas), hapus dari server vendor.
+        await transcriptionProvider.deleteTranscript(jobId: jobId)
     }
 
     private func summarizeStep(_ meeting: Meeting) async throws {
@@ -176,6 +211,15 @@ final class MeetingProcessor {
         meeting.summaryText = result.summaryText
         meeting.topics = result.topics
         meeting.decisions = result.decisions
+        meeting.summaryPromptTokens = result.promptTokens
+        meeting.summaryCompletionTokens = result.completionTokens
+        // Generate ulang (L7) bisa memanggil ini lebih dari sekali — buang action items lama
+        // dulu supaya tidak duplikat, bukan isDone-nya (checkbox) hilang percuma di alur normal
+        // karena di alur normal daftar ini memang masih kosong.
+        for old in meeting.actionItems {
+            modelContext.delete(old)
+        }
+        meeting.actionItems.removeAll()
         for (index, item) in result.actionItems.enumerated() {
             let model = ActionItem(task: item.task, pic: item.pic, dueDate: item.dueDate, order: index)
             meeting.actionItems.append(model)
