@@ -36,7 +36,7 @@ Sudah ada (buatan sesi logic, pakai langsung):
 - `Meeting.providerJobId: String?` (L1.4) — ID job transkripsi vendor (D2 = A, satu file per meeting), dipakai lanjut polling setelah app ditutup.
 - `MeetingStatus` enum, 5 case: `.recorded`, `.queued`, `.processing`, `.done`, `.failed`. UI tinggal `extension` di `DesignSystem/MeetingStatus+Style.swift` untuk `.label`/`.colors` sesuai `design-handoff.md` bagian 7. **Jangan bikin enum status baru.**
 - `TranscriptionProvider` protocol — `Services/TranscriptionProvider.swift`
-- `KeychainStore` (enum, static methods `set`/`get`/`delete`) — `Services/KeychainStore.swift`
+- `KeychainStore` (enum, static methods `set` (`throws`), `get`, `delete`), `KeychainStore.KeychainError` (L1.5) — `Services/KeychainStore.swift`
 - `RecordingConstants.segmentDuration` — `Services/RecordingConstants.swift`
 
 Menyusul dari sesi logic (nama final, belum ada isinya):
@@ -78,7 +78,7 @@ Aksi yang dipanggil UI: mulai (dengan judul, agenda, istilah), tandai, jeda, lan
   - Simpan nama speaker (D3) dan daftar nama yang pernah dipakai untuk baris "Saran" di sheet ganti nama. UI memanggil `onSave(nama, generateUlang)`.
 - **Pengaturan 09 dan Onboarding 10–11** (sudah dibangun):
   - UI menyimpan preferensi di `UserDefaults` (lihat `Views/Shared/AppStorageKey.swift`): `monthlyCostLimitUSD` (Double, 0 = tanpa batas, D7) dan `audioRetentionDays` (Int, 0 = selamanya, default 30, D5). Logic membaca kunci yang sama untuk L7.
-  - UI memanggil `KeychainStore` hanya lewat `Views/Shared/APIKeyStore.swift`. Kalau L1.5 mengubah signature `set`, kabari sesi UI; cukup file itu yang disesuaikan.
+  - UI memanggil `KeychainStore` hanya lewat `Views/Shared/APIKeyStore.swift`. L1.5 selesai: `KeychainStore.set` sekarang `throws`, jadi `APIKeyStore.save` juga `throws`. Sudah disesuaikan di `OnboardingKeyView.swift` dan `KeyEditorSheet.swift` (pakai `try?`, abaikan error diam-diam — kalau mau tampilkan pesan error ke user, ganti `try?` jadi `do/catch` di dua file itu).
   - Pemakaian biaya bulan ini (USD dan durasi audio) untuk kartu "Biaya API". Sekarang tampil "Belum tercatat".
   - Cek validitas API key (panggilan ringan ke vendor) supaya UI bisa menampilkan "Valid" seperti di Figma. Sekarang UI hanya menampilkan "Terisi".
   - Izin mikrofon diminta di onboarding (`AVAudioApplication.requestRecordPermission`). `AudioRecorder` tetap perlu memeriksa izin sebelum merekam, karena user bisa melewati atau menolak.

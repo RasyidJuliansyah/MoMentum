@@ -105,7 +105,7 @@ Satu tugas per giliran. Centang setelah tes lolos dan sudah di-commit. Branch pe
   Selesai kalau: ada tes cascade delete (hapus `Meeting` ikut menghapus segment, utterance, action item, dan speaker).
 - [x] **L1.5 Perkuat `KeychainStore`** (perbaiki bug: tulis tes yang gagal dulu). Set `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`, tambah `kSecAttrService` sebagai namespace, dan kembalikan hasil `OSStatus` dari `set`, misalnya dengan `throws`, supaya kegagalan tidak diam-diam hilang.
   Selesai kalau: tes membaca atribut item dan memastikan nilai accessible benar, dan tes lama tetap lolos.
-- [ ] **L1.6 Perbarui `docs/handover.md`.** Tambah nama baru di bagian 3 dan perbarui tabel bagian 4, supaya sesi UI tahu field apa yang sudah tersedia.
+- [x] **L1.6 Perbarui `docs/handover.md`.** Tambah nama baru di bagian 3 dan perbarui tabel bagian 4, supaya sesi UI tahu field apa yang sudah tersedia.
 
 ### L2 · `AudioRecorder` (rekam tahan gangguan)
 
