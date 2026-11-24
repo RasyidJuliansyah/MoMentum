@@ -12,7 +12,7 @@ import SwiftData
 final class MoMentumTests: XCTestCase {
 
     private func makeInMemoryContext() throws -> ModelContext {
-        let schema = Schema([Meeting.self, Segment.self, Utterance.self, ActionItem.self])
+        let schema = Schema([Meeting.self, Segment.self, Utterance.self, ActionItem.self, Speaker.self])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: schema, configurations: [config])
         return ModelContext(container)
@@ -74,6 +74,30 @@ final class MoMentumTests: XCTestCase {
         XCTAssertEqual(fetched?.processingStep, .transcribing)
         XCTAssertEqual(fetched?.lastErrorKind, .invalidAPIKey)
         XCTAssertEqual(fetched?.lastErrorMessage, "API key STT ditolak (401).")
+    }
+
+    // L1.3: ganti nama speaker sekali mengubah nama tampil di semua utterance berlabel sama.
+    func testSpeakerRenameAffectsAllUtterancesWithSameLabel() throws {
+        let context = try makeInMemoryContext()
+        let meeting = Meeting(title: "Daily Standup")
+        let segment = Segment(fileName: "seg1.m4a")
+        let utterance1 = Utterance(speakerLabel: "Speaker 1", startMs: 0, endMs: 1000, text: "Halo")
+        let utterance2 = Utterance(speakerLabel: "Speaker 1", startMs: 1000, endMs: 2000, text: "Lanjut")
+        segment.utterances = [utterance1, utterance2]
+        meeting.segments = [segment]
+        let speaker = Speaker(label: "Speaker 1")
+        meeting.speakers = [speaker]
+        context.insert(meeting)
+        try context.save()
+
+        XCTAssertEqual(meeting.displayName(for: "Speaker 1"), "Speaker 1", "belum diganti, jatuh ke label mentah")
+
+        speaker.name = "Budi"
+        try context.save()
+
+        XCTAssertEqual(meeting.displayName(for: utterance1.speakerLabel), "Budi")
+        XCTAssertEqual(meeting.displayName(for: utterance2.speakerLabel), "Budi")
+        XCTAssertEqual(meeting.displayName(for: "Speaker 2"), "Speaker 2", "label tanpa Speaker tersimpan tetap mentah")
     }
 
 }

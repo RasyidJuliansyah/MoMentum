@@ -57,10 +57,18 @@ final class Meeting {
     @Relationship(deleteRule: .cascade, inverse: \ActionItem.meeting)
     var actionItems: [ActionItem] = []
 
+    @Relationship(deleteRule: .cascade, inverse: \Speaker.meeting)
+    var speakers: [Speaker] = []
+
     init(title: String, createdAt: Date = .now, status: MeetingStatus = .recorded) {
         self.title = title
         self.createdAt = createdAt
         self.durationSeconds = 0
         self.status = status
+    }
+
+    /// Nama tampil untuk label speaker: nama yang diganti user, atau label mentah kalau belum diganti.
+    func displayName(for label: String) -> String {
+        speakers.first(where: { $0.label == label })?.name ?? label
     }
 }
