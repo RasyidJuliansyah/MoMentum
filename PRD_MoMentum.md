@@ -96,7 +96,7 @@ Objectives
     Transkrip Bahasa Indonesia dengan label speaker
     Sebagai profesional kantor, saya ingin transkrip yang memisahkan tiap pembicara, sehingga saya tahu siapa yang mengatakan apa.
     M
-    Lewat cloud STT dengan diarization. Vendor dipilih saat spike. Audio di atas 2 jam dikirim per segmen, lalu label speaker antarsegmen perlu disamakan; risiko teknis ini dicek saat spike.
+    Lewat cloud STT dengan diarization (AssemblyAI). Rekaman disimpan per segmen di HP supaya tahan crash, lalu digabung jadi satu file sebelum dikirim (batas AssemblyAI 10 jam / 5 GB per transkrip), sehingga label speaker konsisten di seluruh meeting tanpa perlu disamakan antarsegmen. Kualitas diarization untuk rekaman di atas 2 jam tetap perlu diuji dengan rekaman nyata.
     Ganti nama speaker
     Sebagai profesional kantor, saya ingin mengubah label Speaker 1 menjadi nama orang, sehingga transkrip dan PIC terbaca jelas.
     M
@@ -137,6 +137,14 @@ Objectives
     Sebagai profesional kantor, saya ingin rekaman diproses otomatis begitu ada internet, sehingga saya tidak perlu mengulang.
     S
     Status per meeting: direkam, menunggu, diproses, selesai, gagal (dengan tombol coba lagi).
+    Proses di background
+    Sebagai profesional kantor, saya ingin menutup app setelah menekan Simpan & proses, sehingga saya bisa lanjut ke meeting atau pekerjaan berikutnya tanpa menunggu MoM selesai.
+    S
+    Upload lewat background URLSession; transkripsi berjalan di server vendor. Mengambil hasil transkrip dan membuat ringkasan butuh app dibangunkan iOS (BGTaskScheduler), dan waktunya ditentukan iOS, jadi bisa tertunda. Tanpa backend, waktu selesai tidak bisa dijamin; webhook atau push butuh backend (Fase 3). Kriteria: Given meeting berstatus diproses dan app ditutup, When iOS memberi waktu background, Then proses lanjut dari langkah terakhir tanpa upload ulang.
+    Notifikasi MoM siap
+    Sebagai profesional kantor, saya ingin mendapat notifikasi saat MoM selesai dibuat, sehingga saya bisa langsung membagikannya ke tim tanpa mengecek app berulang kali.
+    S
+    Notifikasi lokal. Izin notifikasi diminta saat pertama kali memakai proses di background. Mengetuk notifikasi membuka layar Detail meeting itu. Kriteria: Given izin notifikasi diberikan dan app di background, When proses meeting selesai, Then muncul notifikasi "MoM siap" yang membuka meeting tersebut.
     Penanda momen penting
     Sebagai profesional kantor, saya ingin menandai momen saat merekam, sehingga bagian itu diprioritaskan di ringkasan.
     S

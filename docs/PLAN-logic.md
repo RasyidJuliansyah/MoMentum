@@ -76,14 +76,14 @@ L1 (model lengkap). UI sedang menunggu field ini untuk layar 02, 03, 05, 07, 09,
 | # | Keputusan | Dibutuhkan sebelum | Usulan | Status |
 | --- | --- | --- | --- | --- |
 | D1 | Deployment target: tetap 27.2 atau turun ke 26.0 (desain menargetkan iOS 26)? Tergantung versi iOS di iPhone yang dipakai | L2 | Ikuti versi iOS iPhone pribadi | belum diputuskan |
-| D2 | Cara menyamakan label speaker untuk meeting panjang | L1 | **A**: segmen tetap disimpan terpisah di HP (tahan crash), tapi digabung jadi satu file sebelum upload. AssemblyAI menerima sampai 10 jam / 5GB per transkrip dan upload lokal sampai 2,2GB ([FAQ AssemblyAI](https://www.assemblyai.com/docs/faq/are-there-any-limits-on-file-size-or-file-duration-for-files-submitted-to-the-api), dicek 24 Nov 2026). Dengan satu kali diarization, label otomatis konsisten. **B** (cadangan): kirim per segmen lalu cocokkan label lewat potongan audio yang tumpang tindih. Jauh lebih rumit. Pilihan A mengubah alur langkah 2 di `docs/architecture.md`, jadi dokumen itu perlu diperbarui | belum diputuskan |
+| D2 | Cara menyamakan label speaker untuk meeting panjang | L1 | **A**: segmen tetap disimpan terpisah di HP (tahan crash), tapi digabung jadi satu file sebelum upload. AssemblyAI menerima sampai 10 jam / 5GB per transkrip dan upload lokal sampai 2,2GB ([FAQ AssemblyAI](https://www.assemblyai.com/docs/faq/are-there-any-limits-on-file-size-or-file-duration-for-files-submitted-to-the-api), dicek 24 Nov 2026). Dengan satu kali diarization, label otomatis konsisten. **B** (cadangan): kirim per segmen lalu cocokkan label lewat potongan audio yang tumpang tindih. Jauh lebih rumit. Pilihan A mengubah alur langkah 2 di `docs/architecture.md`, jadi dokumen itu perlu diperbarui | **Diputuskan 24 Nov 2026: A** (pemilik produk: "satu kesatuan full"). |
 | D3 | Tempat menyimpan nama speaker | L1 | Model baru `Speaker` (label, nama opsional) milik `Meeting`. `Utterance.speakerLabel` tetap label mentah, sedangkan nama tampil diambil dari `Speaker`. Ganti nama cukup mengubah satu field | belum diputuskan |
 | D4 | Vendor dan model LLM untuk ringkasan. Penyebutan Anthropic di desain hanya contoh isi layar | L5 | — | belum diputuskan |
 | D5 | Rekaman audio disimpan berapa lama setelah MoM jadi (open question di PRD) | L7 | — | belum diputuskan |
 | D6 | Hapus transkrip di server AssemblyAI setelah hasil tersimpan lokal? | L7 | — | belum diputuskan |
 | D7 | Batas biaya API per bulan (open question di PRD) | L7 | — | belum diputuskan |
 | D8 | `AVAudioRecorder` atau `AVAudioEngine` untuk perekam, plus format dan bitrate audio | L2 | Diputuskan di L2.1 setelah uji kecil di perangkat | belum diputuskan |
-| D9 | Proses cloud tetap jalan saat app di background (background `URLSession`)? | L6 | Tidak di Fase 1. Proses berjalan saat app aktif, lalu dilanjutkan saat app dibuka lagi | belum diputuskan |
+| D9 | Proses cloud tetap jalan saat app di background (background `URLSession`)? | L6 | Ya, masuk PRD sebagai requirement S: "Proses di background" dan "Notifikasi MoM siap". Upload lewat background `URLSession`, lanjutan proses lewat `BGTaskScheduler`, notifikasi lokal saat MoM siap. Waktu dari iOS tidak bisa dijamin tanpa backend | **Diputuskan 24 Nov 2026** |
 
 ### Yang tidak boleh diubah
 
@@ -166,7 +166,7 @@ Uji di perangkat setelah L2 (dikerjakan pemilik, hasil dicatat di bagian F):
 ### L6 · `MeetingProcessor`, antrean offline, dan coba lagi
 
 - [ ] **L6.1 `@Observable final class MeetingProcessor`.** Menjalankan langkah layar 05 berurutan dan memperbarui `status` serta `processingStep`. Tiap langkah idempoten: coba lagi melanjutkan dari langkah yang gagal tanpa upload ulang. Proses satu meeting dalam satu waktu.
-- [ ] **L6.2 Pemicu.** Proses berjalan saat "Simpan & proses" ditekan, saat app diluncurkan atau kembali ke depan, dan saat koneksi pulih (`NWPathMonitor`, framework bawaan). Tanpa internet, status menjadi `.queued`. Saat app ke background, pakai `beginBackgroundTask` untuk menyelesaikan langkah yang sedang berjalan.
+- [ ] **L6.2 Pemicu.** Proses berjalan saat "Simpan & proses" ditekan, saat app diluncurkan atau kembali ke depan, dan saat koneksi pulih (`NWPathMonitor`, framework bawaan). Tanpa internet, status menjadi `.queued`. Saat app ke background, pakai `beginBackgroundTask` untuk menyelesaikan langkah yang sedang berjalan. Sesuai D9: upload memakai background `URLSession`, langkah berikutnya didaftarkan ke `BGTaskScheduler`, dan notifikasi lokal "MoM siap" dikirim saat selesai (minta izin notifikasi saat pertama kali dipakai). Ketuk notifikasi membuka Detail meeting.
 - [ ] **L6.3 API untuk UI:** `process(_:)`, `retry(_:)`, dan state progres untuk `ProgressRing`. Daftarkan di `MoMentumApp.swift` dan perbarui handover.
 - [ ] **L6.4 Tes** dengan provider tiruan: urutan status pada alur normal, gagal menjadi `.failed` dengan jenis error yang benar, coba lagi melanjutkan dari langkah yang gagal, dan offline menjadi `.queued`.
 

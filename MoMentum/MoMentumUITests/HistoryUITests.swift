@@ -35,8 +35,8 @@ final class HistoryUITests: XCTestCase {
         attach(app, "04-riwayat-gagal")
 
         sprint.tap()
-        XCTAssertTrue(element(app, startingWith: "Transkripsi berhenti di segmen 7").waitForExistence(timeout: 5))
-        XCTAssertTrue(element(app, startingWith: "Status segmen: 6 selesai, 1 gagal, 4 menunggu").exists)
+        XCTAssertTrue(element(app, startingWith: "Proses gagal").waitForExistence(timeout: 5))
+        XCTAssertTrue(element(app, startingWith: "Rekaman tersimpan").exists)
         attach(app, "13-proses-gagal")
 
         app.buttons["Cek API key"].tap()
@@ -53,7 +53,7 @@ final class HistoryUITests: XCTestCase {
         weekly.tap()
 
         XCTAssertTrue(element(app, startingWith: "Ringkasan, action items & MoM").waitForExistence(timeout: 5))
-        XCTAssertTrue(element(app, startingWith: "Biarkan app terbuka").exists)
+        XCTAssertTrue(element(app, startingWith: "App boleh ditutup").exists)
         attach(app, "05-memproses")
     }
 

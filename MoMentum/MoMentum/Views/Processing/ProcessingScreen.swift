@@ -91,12 +91,7 @@ struct ProcessingScreen: View {
             }
 
             errorCard
-
-            if content.segments.isEmpty {
-                ProcessingStepList(steps: content.steps)
-            } else {
-                SegmentStatusGrid(segments: content.segments)
-            }
+            ProcessingStepList(steps: content.steps)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -138,9 +133,8 @@ struct ProcessingScreen: View {
         case .recorded:
             NoteBox(systemImage: "tray", text: "Belum diproses. Ketuk Proses sekarang untuk mulai.")
         case .processing:
-            // Figma: "App boleh ditutup. Proses tetap jalan dan kamu dapat notifikasi saat MoM siap."
-            // Belum dipakai: proses di background dan notifikasi belum direncanakan (PLAN-logic D9).
-            NoteBox(systemImage: "info.circle", text: "Biarkan app terbuka sampai selesai. Kalau ditutup, proses lanjut saat app dibuka lagi.")
+            // PRD: "Proses di background" dan "Notifikasi MoM siap" (PLAN-logic D9, L6.2).
+            NoteBox(systemImage: "bell", text: "App boleh ditutup. Proses tetap jalan dan kamu dapat notifikasi saat MoM siap.")
         case .done:
             EmptyView()
         }

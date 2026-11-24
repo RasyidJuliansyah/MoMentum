@@ -18,7 +18,7 @@
 
 ## Alur data (ringkas)
 1. Rekam → segmen 15 menit disimpan lokal (file audio + metadata SwiftData).
-2. Tiap segmen dikirim ke AssemblyAI via `TranscriptionProvider`. Hasil per segmen digabung, label speaker antarsegmen disamakan (titik rawan, lihat catatan di PRD).
+2. Segmen digabung jadi satu file lalu dikirim sekali ke AssemblyAI via `TranscriptionProvider` (keputusan D2 = A, 24 Nov 2026). Satu kali diarization, jadi label speaker konsisten di seluruh meeting.
 3. Transkrip final → `SummaryProvider` (LLM) → ringkasan, action items, MoM.
 4. Semua hasil ditulis balik ke SwiftData lokal.
 

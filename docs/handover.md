@@ -59,20 +59,19 @@ Aksi yang dipanggil UI: mulai (dengan judul, agenda, istilah), tandai, jeda, lan
 **Perilaku Stop:** tombol Stop di UI hanya menjeda lalu membuka sheet 03. Rekaman baru ditutup saat user menekan Simpan. Batal di sheet kembali ke layar rekam dalam keadaan dijeda, jadi rekaman tidak boleh dibuang di titik ini.
 
 **`Meeting` dan `MeetingProcessor` → Riwayat 04, Memproses 05, Proses gagal 13:**
-- Langkah proses saat ini (PLAN-logic L1.2) dan perkiraan progres 0...1, untuk bar di kartu dan ring di layar 05. Urutan langkah di UI: rekaman tersimpan → segmen terunggah → transkripsi & pemisahan speaker → penyamaan label speaker → ringkasan, action items & MoM.
+- Langkah proses saat ini (PLAN-logic L1.2) dan perkiraan progres 0...1, untuk bar di kartu dan ring di layar 05. Urutan langkah di UI (D2 = A, satu file): rekaman tersimpan → rekaman terunggah → transkripsi & pemisahan speaker → ringkasan, action items & MoM. Untuk layar 13, UI juga perlu tahu langkah mana yang gagal.
 - Jenis dan pesan error terakhir (L1.2). Jenis "API key tidak valid" menonjolkan tombol "Cek API key" di layar 13.
 - `process(_:)` dan `retry(_:)` (L6.3), untuk tombol "Simpan & proses" dan "Coba lagi".
 - Agenda dan istilah khusus di `Meeting` (L1.1). UI mengisinya dari `MeetingContextDraft` (`title`, `agenda`, `terms`).
 - Pemutar audio untuk tombol putar di sheet 03. Belum ada di PLAN-logic.
-- Status per segmen untuk grid layar 13 (selesai, gagal, menunggu). Saat ini UI memakai `Segment.transcribed` dan menganggap segmen pertama yang belum selesai sebagai tempat gagal. Kalau D2 = A (gabung jadi satu file sebelum upload), grid ini perlu diganti; kabari sesi UI.
-- Ukuran file per segmen dan jumlah segmen yang sudah terunggah, untuk keterangan langkah di layar 05 ("8 segmen · 412 MB di iPhone", "8/8 ke layanan STT").
+- Ukuran total rekaman di iPhone dan progres upload, untuk keterangan langkah di layar 05 ("8 segmen · 412 MB di iPhone", "Terunggah 64%").
 - **Layar Detail 06–08** (sudah dibangun, `Views/Detail/`). Yang belum bisa tampil karena data belum ada:
   - Urutan action item. Relasi SwiftData tidak menjaga urutan, jadi `ActionItem` perlu field urutan (misalnya `order: Int` sesuai output LLM).
   - Status selesai action item (`isDone`) untuk checkbox di layar 06.
   - Topik dan keputusan MoM sebagai daftar terstruktur (`[String]`), dari hasil `SummaryProvider`. UI menyusun MoM teks dan Markdown sendiri dari data ini (`Views/Detail/MoMDocument.swift`).
   - Waktu selesai proses ("Diproses 21 Nov, 16:42") dan jumlah penanda momen ("2 momen ditandai").
   - Simpan nama speaker (D3) dan daftar nama yang pernah dipakai untuk baris "Saran" di sheet ganti nama. UI memanggil `onSave(nama, generateUlang)`.
-- Desain layar 05 menulis "App boleh ditutup. Proses tetap jalan dan kamu dapat notifikasi saat MoM siap." UI belum memakai kalimat itu sampai D9 (proses di background) dan notifikasi diputuskan.
+- Layar 05 kini menulis "App boleh ditutup. Proses tetap jalan dan kamu dapat notifikasi saat MoM siap." sesuai Figma, karena D9 sudah diputuskan (PRD: "Proses di background" dan "Notifikasi MoM siap"). Kalimat ini baru benar setelah L6.2 selesai. Ketuk notifikasi harus membuka Detail meeting; UI butuh cara membuka meeting dari ID (misalnya `persistentModelID`).
 
 ## 4. Status progres
 
