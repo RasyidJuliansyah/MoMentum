@@ -40,6 +40,8 @@ Sudah ada (buatan sesi logic, pakai langsung):
 - `RecordingConstants.segmentDuration` — `Services/RecordingConstants.swift`
 - `TranscriptionProvider` (L3.1): `submit(audioFileURL:options:) async throws -> String` (jobId) dan `pollUntilComplete(jobId:) async throws -> TranscriptResult`. `TranscriptionOptions`, `TranscribedUtterance`, `TranscriptionError` (`.missingAPIKey/.invalidAPIKey/.network/.vendor/.unknown`) — `Services/TranscriptionProvider.swift`
 - `AssemblyAITranscriptionProvider` (L3.2) — implementasi vendor, `Services/AssemblyAITranscriptionProvider.swift`
+- `AudioMerger.merge(segmentURLs:) async throws -> URL` (L4.1) — `Services/AudioMerger.swift`
+- `SpeakerLabelNormalizer.normalize(_:meeting:context:) -> [TranscribedUtterance]` (L4.2) — `Services/SpeakerLabelNormalizer.swift`
 
 Menyusul dari sesi logic (nama final, belum ada isinya):
 - `AudioRecorder` — `@Observable`, expose state rekam/jeda/durasi/level audio untuk `WaveformView`
@@ -103,7 +105,7 @@ Aksi yang dipanggil UI: mulai (dengan judul, agenda, istilah), tandai, jeda, lan
 | `AudioRecorder.isStorageLow`/`storageRemainingBytes`/`storageRemainingHours` (L2.4, D10) | Selesai. Ambang < 1 jam rekaman (~28,8 MB). Nama sama persis dengan `RecordingSnapshot`, tinggal pasang |
 | Pemulihan setelah app dibunuh saat merekam (L2.5) | Selesai, otomatis di `init AudioRecorder` — tidak perlu dipanggil UI. Meeting yang kepotong dapat `status = .recorded` dan `endedAt` terisi, jadi muncul normal di Riwayat 04 (tanpa proses lanjut, user perlu tekan "Simpan & proses" manual nanti di L6). Segmen rusak/hilang otomatis dibuang dari `meeting.segments` |
 | Implementasi AssemblyAI di `TranscriptionProvider` (L3.1/L3.2) | Selesai, ada test (5 kasus, `URLProtocol` tiruan). Uji manual dengan API key asli (L3.4) belum — butuh pemilik produk |
-| Penyatuan label speaker antarsegmen | Belum |
+| Penyatuan label speaker antarsegmen (`AudioMerger` L4.1, `SpeakerLabelNormalizer` L4.2) | Selesai, ada test. Uji kualitas rekaman nyata >2 jam (L4.3) belum — butuh pemilik produk |
 | `SummaryProvider` (LLM) | Belum |
 | Queue offline + retry | Belum |
 | `Views/`, `DesignSystem/` | Berjalan (sesi UI, branch `feat/ui-design-system`). Selesai dengan data sementara: DesignSystem, Beranda 01, Merekam 02/14/15, Simpan 03, Riwayat 04/12, Memproses 05, Proses gagal 13, Detail 06–08, Pengaturan 09, Onboarding 10–11. Semua layar Figma sudah dibangun; tinggal disambungkan ke service Logic (lihat 3a) |

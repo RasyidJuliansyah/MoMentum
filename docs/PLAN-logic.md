@@ -157,12 +157,15 @@ Uji di perangkat setelah L2 (dikerjakan pemilik, hasil dicatat di bagian F):
 
 ### L4 · Satu label speaker untuk seluruh meeting
 
-- [ ] **L4.1 Kalau D2 = A:** buat `AudioMerger` yang menggabungkan segmen menjadi satu file sementara (`AVMutableComposition` + export). Hapus file sementara setelah upload.
+- [x] **L4.1 Kalau D2 = A:** buat `AudioMerger` yang menggabungkan segmen menjadi satu file sementara (`AVMutableComposition` + export). Hapus file sementara setelah upload.
   Selesai kalau: ada tes yang membuat 3 file nada sintetis di folder sementara (tanpa suara orang), menggabungkannya, lalu memastikan durasi hasil sama dengan jumlah durasi segmen.
   **Kalau D2 = B:** paparkan desain pencocokan label di Plan mode dulu, baru dikerjakan.
-- [ ] **L4.2 Normalisasi label.** Label vendor (`A`, `B`, dst.) diubah menjadi `Speaker 1`, `Speaker 2` sesuai urutan kemunculan, lalu disimpan ke `Utterance` dan `Speaker`.
+  Catatan: `AudioMerger.merge(segmentURLs:) async throws -> URL`, enum statik (tidak ada state). Input harus sudah terurut oleh caller (`Segment.index`) — `AudioMerger` tidak mengurutkan ulang. Hapus file hasil gabungan setelah upload adalah tanggung jawab caller (`MeetingProcessor`, L6), bukan `AudioMerger`. Tes pakai fixture WAV PCM sintetis (nada hening) seperti L2.5/L4.2, bukan `AVAudioRecorder` sungguhan.
+- [x] **L4.2 Normalisasi label.** Label vendor (`A`, `B`, dst.) diubah menjadi `Speaker 1`, `Speaker 2` sesuai urutan kemunculan, lalu disimpan ke `Utterance` dan `Speaker`.
   Selesai kalau: ada tes.
+  Catatan: `SpeakerLabelNormalizer.normalize(_:meeting:context:) -> [TranscribedUtterance]`. Mengembalikan array baru (input `[TranscribedUtterance]` tidak dimutasi) dan membuat `Speaker` per label unik langsung di `meeting.speakers` + `context.insert`. Dipanggil setelah `pollUntilComplete` (L6), sebelum `Utterance` dibuat dari hasil normalisasi.
 - [ ] **L4.3 Uji kualitas** pada satu rekaman meeting nyata di atas 2 jam. Ini menjawab open question PRD soal diarization untuk rekaman panjang. Hasilnya dicatat di bagian F, bukan file transkripnya.
+  **Butuh dikerjakan pemilik produk** (rekaman meeting nyata + API key asli) — ditunda ke sesi uji fisik bersama L2 dan L3.4.
 
 ### L5 · `SummaryProvider` (LLM). Menunggu D4
 
