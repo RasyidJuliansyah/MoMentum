@@ -22,10 +22,11 @@ enum SummaryPrompt {
 
     {
       "summaryText": "ringkasan 2-4 paragraf dalam Bahasa Indonesia",
+      "topics": ["topik yang dibahas, satu string per topik"],
+      "decisions": ["keputusan yang disepakati, satu string per keputusan"],
       "actionItems": [
         {"task": "deskripsi tugas", "pic": "nama atau 'PIC belum jelas'", "dueDate": "teks bebas atau null"}
-      ],
-      "momMarkdown": "MoM lengkap dalam Markdown dengan bagian: Info Meeting, Peserta, Topik, Keputusan, Action Items"
+      ]
     }
     """
 

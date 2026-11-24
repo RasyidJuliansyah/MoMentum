@@ -53,6 +53,12 @@ final class Meeting {
     // Hasil olahan, diisi setelah transkripsi/LLM selesai
     var summaryText: String?
     var momText: String?
+    /// Topik dan keputusan MoM, daftar terstruktur dari `SummaryProvider` (L6). UI menyusun
+    /// teks/Markdown MoM sendiri dari field ini (`Views/Detail/MoMDocument.swift`), bukan `momText`.
+    var topics: [String] = []
+    var decisions: [String] = []
+    /// Waktu proses (transkripsi+ringkasan) selesai — "Diproses 21 Nov, 16:42" (layar 06).
+    var processedAt: Date?
 
     @Relationship(deleteRule: .cascade, inverse: \Segment.meeting)
     var segments: [Segment] = []

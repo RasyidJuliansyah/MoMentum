@@ -42,6 +42,10 @@ Sudah ada (buatan sesi logic, pakai langsung):
 - `AssemblyAITranscriptionProvider` (L3.2) — implementasi vendor, `Services/AssemblyAITranscriptionProvider.swift`
 - `AudioMerger.merge(segmentURLs:) async throws -> URL` (L4.1) — `Services/AudioMerger.swift`
 - `SpeakerLabelNormalizer.normalize(_:meeting:context:) -> [TranscribedUtterance]` (L4.2) — `Services/SpeakerLabelNormalizer.swift`
+- `MeetingProcessor` (L6.1-L6.3): `@Observable`, `process(_ meeting:)`, `retry(_ meeting:)`, `progressByMeetingID: [PersistentIdentifier: Double]` (0...1, untuk `ProgressRing`). Daftar di `.environment(...)` — `Services/MeetingProcessor.swift`
+- `NetworkMonitor` (L6.2): `@Observable`, `isConnected: Bool`. Daftar di `.environment(...)` — `Services/NetworkMonitor.swift`
+- `Meeting.topics`/`decisions: [String]` (L6.1) — isi `MoMDocument(meeting:content:)` yang sebelumnya kosong (lihat `handover.md` 3a lama). `Meeting.processedAt: Date?` — "Diproses 21 Nov, 16:42" (layar 06)
+- `ActionItem.order: Int` dan `isDone: Bool` (L6.1) — urutan tampil dan checkbox layar 06
 
 - `SummaryProvider` (D4, L5.1): `summarize(_ input: SummaryInput) async throws -> SummaryResult`. `SummaryInput` (meetingTitle, agenda, glossaryTerms, markerOffsetsMs, transcript pakai nama tampil speaker — bukan label mentah). `SummaryResult` (summaryText, actionItems: `[SummaryActionItem]` punya task/pic/dueDate, momMarkdown). `SummaryError` (`.missingAPIKey/.invalidAPIKey/.network/.vendor/.invalidResponse/.unknown`) — `Services/SummaryProvider.swift`
 - `OpenAICompatibleSummaryProvider` (L5.3) — implementasi generic "OpenAI-compatible chat completions" (D4: bukan vendor tunggal, lihat 3a di bawah soal field Base URL/model) — `Services/OpenAICompatibleSummaryProvider.swift`
@@ -91,6 +95,12 @@ Aksi yang dipanggil UI: mulai (dengan judul, agenda, istilah), tandai, jeda, lan
   - Cek validitas API key (panggilan ringan ke vendor) supaya UI bisa menampilkan "Valid" seperti di Figma. Sekarang UI hanya menampilkan "Terisi".
   - Izin mikrofon diminta di onboarding (`AVAudioApplication.requestRecordPermission`). `AudioRecorder` tetap perlu memeriksa izin sebelum merekam, karena user bisa melewati atau menolak.
 - Layar 05 kini menulis "App boleh ditutup. Proses tetap jalan dan kamu dapat notifikasi saat MoM siap." sesuai Figma, karena D9 sudah diputuskan (PRD: "Proses di background" dan "Notifikasi MoM siap"). Kalimat ini baru benar setelah L6.2 selesai. Ketuk notifikasi harus membuka Detail meeting; UI butuh cara membuka meeting dari ID (misalnya `persistentModelID`).
+- **L6 selesai (24 Nov 2026), ada 3 kabel UI yang masih perlu dipasang** (logic-nya sudah ada, tinggal panggil dari View):
+  1. Tombol "Simpan & proses" (layar 03/05) panggil `meetingProcessor.process(meeting)`. Tombol "Coba lagi" (layar 13) panggil `meetingProcessor.retry(meeting)`.
+  2. Progres ring layar 05 baca `meetingProcessor.progressByMeetingID[meeting.persistentModelID] ?? 0`.
+  3. Pemicu otomatis (requirement S, belum ada tempatnya di View manapun): `.onChange(of: scenePhase)` saat app kembali ke depan, dan `.onChange(of: networkMonitor.isConnected)` saat koneksi pulih — keduanya panggil `process(_:)` untuk tiap meeting berstatus `.queued`/`.processing` (query lewat `@Query` biasa).
+  4. Notifikasi "MoM siap": perlu `UNUserNotificationCenterDelegate` buat baca `userInfo["meetingID"]` dan membuka Detail meeting saat notifikasi diketuk. Belum diimplementasikan di sesi Logic (area App delegate/UI).
+  5. Settings 09: field Base URL + nama model LLM (D4) belum ada — lihat catatan di atas (3a, bagian Pengaturan). Sementara di-hardcode di `MoMentumApp.swift` (`https://api.openai.com/v1`, `gpt-4o-mini`).
 
 ## 4. Status progres
 
@@ -111,6 +121,7 @@ Aksi yang dipanggil UI: mulai (dengan judul, agenda, istilah), tandai, jeda, lan
 | Implementasi AssemblyAI di `TranscriptionProvider` (L3.1/L3.2) | Selesai, ada test (5 kasus, `URLProtocol` tiruan). Uji manual dengan API key asli (L3.4) belum — butuh pemilik produk |
 | Penyatuan label speaker antarsegmen (`AudioMerger` L4.1, `SpeakerLabelNormalizer` L4.2) | Selesai, ada test. Uji kualitas rekaman nyata >2 jam (L4.3) belum — butuh pemilik produk |
 | `SummaryProvider` (LLM, D4 diputuskan generic OpenAI-compatible, L5.1-L5.4) | Selesai, ada test (6 kasus). Field Base URL/nama model di Settings 09 belum ditambah — wilayah sesi UI, lihat 3a |
+| `MeetingProcessor`, antrean offline, coba lagi (L6.1-L6.4) | Selesai, ada test (5 kasus). 3 kabel UI belum dipasang (tombol, progress ring, pemicu otomatis, notifikasi delegate) — lihat daftar di 3a |
 | Queue offline + retry | Belum |
 | `Views/`, `DesignSystem/` | Berjalan (sesi UI, branch `feat/ui-design-system`). Selesai dengan data sementara: DesignSystem, Beranda 01, Merekam 02/14/15, Simpan 03, Riwayat 04/12, Memproses 05, Proses gagal 13, Detail 06–08, Pengaturan 09, Onboarding 10–11. Semua layar Figma sudah dibangun; tinggal disambungkan ke service Logic (lihat 3a) |
 

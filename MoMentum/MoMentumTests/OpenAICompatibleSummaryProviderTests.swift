@@ -47,17 +47,18 @@ final class OpenAICompatibleSummaryProviderTests: XCTestCase {
 
     func testValidJSONParsedIntoSummaryResult() async throws {
         let json = """
-        {"summaryText":"Ringkasan singkat.","actionItems":[{"task":"Perbaiki bug login","pic":"Ani","dueDate":"Jumat depan"}],"momMarkdown":"# MoM"}
+        {"summaryText":"Ringkasan singkat.","topics":["Progres sprint"],"decisions":["Rilis ditunda ke Jumat"],"actionItems":[{"task":"Perbaiki bug login","pic":"Ani","dueDate":"Jumat depan"}]}
         """
         MockURLProtocol.requestHandler = { _ in (200, self.chatCompletionResponse(content: json)) }
 
         let result = try await makeProvider().summarize(sampleInput())
 
         XCTAssertEqual(result.summaryText, "Ringkasan singkat.")
+        XCTAssertEqual(result.topics, ["Progres sprint"])
+        XCTAssertEqual(result.decisions, ["Rilis ditunda ke Jumat"])
         XCTAssertEqual(result.actionItems.count, 1)
         XCTAssertEqual(result.actionItems.first?.pic, "Ani")
         XCTAssertEqual(result.actionItems.first?.dueDate, "Jumat depan")
-        XCTAssertEqual(result.momMarkdown, "# MoM")
     }
 
     func testMalformedJSONThrowsInvalidResponse() async throws {
@@ -73,7 +74,7 @@ final class OpenAICompatibleSummaryProviderTests: XCTestCase {
 
     func testMissingPICDefaultsToBelumJelas() async throws {
         let json = """
-        {"summaryText":"Ringkasan.","actionItems":[{"task":"Tugas tanpa PIC jelas","dueDate":null}],"momMarkdown":"# MoM"}
+        {"summaryText":"Ringkasan.","actionItems":[{"task":"Tugas tanpa PIC jelas","dueDate":null}]}
         """
         MockURLProtocol.requestHandler = { _ in (200, self.chatCompletionResponse(content: json)) }
 

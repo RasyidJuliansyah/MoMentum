@@ -8,12 +8,14 @@ struct SummaryActionItem: Sendable, Equatable {
     var dueDate: String?
 }
 
-/// Hasil ringkasan LLM, sepadan field `Meeting.summaryText`/`momText` dan `@Model ActionItem`.
+/// Hasil ringkasan LLM, sepadan field `Meeting.summaryText`/`topics`/`decisions` dan `@Model ActionItem`.
+/// Topik dan keputusan dikirim terstruktur (`[String]`), bukan Markdown mentah, karena UI
+/// menyusun MoM teks/Markdown sendiri dari daftar ini (`Views/Detail/MoMDocument.swift`).
 struct SummaryResult: Sendable, Equatable {
     var summaryText: String
+    var topics: [String]
+    var decisions: [String]
     var actionItems: [SummaryActionItem]
-    /// MoM dalam Markdown, format PRD: info meeting, peserta, topik, keputusan, action items.
-    var momMarkdown: String
 }
 
 /// Input untuk `SummaryProvider`. Transkrip sudah pakai nama speaker (hasil `Meeting.displayName(for:)`),

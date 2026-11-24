@@ -93,11 +93,12 @@ final class OpenAICompatibleSummaryProvider: SummaryProvider {
         }
         guard
             let summaryText = json["summaryText"] as? String,
-            let momMarkdown = json["momMarkdown"] as? String,
             let rawItems = json["actionItems"] as? [[String: Any]]
         else {
             throw SummaryError.invalidResponse("Field wajib hilang di JSON ringkasan")
         }
+        let topics = (json["topics"] as? [String]) ?? []
+        let decisions = (json["decisions"] as? [String]) ?? []
 
         let actionItems = rawItems.compactMap { item -> SummaryActionItem? in
             guard let task = item["task"] as? String else { return nil }
@@ -107,6 +108,6 @@ final class OpenAICompatibleSummaryProvider: SummaryProvider {
             return SummaryActionItem(task: task, pic: pic, dueDate: dueDate)
         }
 
-        return SummaryResult(summaryText: summaryText, actionItems: actionItems, momMarkdown: momMarkdown)
+        return SummaryResult(summaryText: summaryText, topics: topics, decisions: decisions, actionItems: actionItems)
     }
 }
