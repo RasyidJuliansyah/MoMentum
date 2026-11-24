@@ -80,8 +80,8 @@ struct OnboardingKeyView: View {
     }
 
     private func saveAndContinue() {
-        if !speechKey.isEmpty { APIKeyStore.save(speechKey, for: .speechToText) }
-        if !summaryKey.isEmpty { APIKeyStore.save(summaryKey, for: .summary) }
+        if !speechKey.isEmpty { try? APIKeyStore.save(speechKey, for: .speechToText) }
+        if !summaryKey.isEmpty { try? APIKeyStore.save(summaryKey, for: .summary) }
         onNext()
     }
 }

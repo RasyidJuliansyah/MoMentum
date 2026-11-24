@@ -103,7 +103,7 @@ Satu tugas per giliran. Centang setelah tes lolos dan sudah di-commit. Branch pe
   Selesai kalau: ada tes yang membuktikan ganti nama satu kali mengubah nama tampil di semua utterance.
 - [x] **L1.4 `Segment` dan `Utterance`.** Tambah `index: Int` di `Segment` untuk urutan. Tambah `providerJobId: String?`, di `Meeting` kalau D2 = A atau di `Segment` kalau D2 = B, supaya polling bisa dilanjutkan setelah app ditutup tanpa upload ulang (menghemat biaya). Tulis di komentar bahwa `Utterance.startMs` dan `endMs` dihitung relatif terhadap awal audio meeting. Kalau D2 = A, hapus `Segment.transcribed` karena tidak terpakai.
   Selesai kalau: ada tes cascade delete (hapus `Meeting` ikut menghapus segment, utterance, action item, dan speaker).
-- [ ] **L1.5 Perkuat `KeychainStore`** (perbaiki bug: tulis tes yang gagal dulu). Set `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`, tambah `kSecAttrService` sebagai namespace, dan kembalikan hasil `OSStatus` dari `set`, misalnya dengan `throws`, supaya kegagalan tidak diam-diam hilang.
+- [x] **L1.5 Perkuat `KeychainStore`** (perbaiki bug: tulis tes yang gagal dulu). Set `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`, tambah `kSecAttrService` sebagai namespace, dan kembalikan hasil `OSStatus` dari `set`, misalnya dengan `throws`, supaya kegagalan tidak diam-diam hilang.
   Selesai kalau: tes membaca atribut item dan memastikan nilai accessible benar, dan tes lama tetap lolos.
 - [ ] **L1.6 Perbarui `docs/handover.md`.** Tambah nama baru di bagian 3 dan perbarui tabel bagian 4, supaya sesi UI tahu field apa yang sudah tersedia.
 
@@ -237,6 +237,7 @@ Catatan macet:
 ### Catatan dan pelajaran (beri tanggal)
 
 - [2026-11-24] Rencana dibuat. Baseline: 1 tes unit lolos di Xcode 27.2.
+- [2026-11-24] L1.5: `KeychainStore.set` jadi `throws` (kirim `OSStatus` lewat `KeychainError`), tambah `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly` dan `kSecAttrService` sebagai namespace. Ini mengubah signature yang dipakai `APIKeyStore.save` (wilayah UI), jadi `APIKeyStore.save` juga jadi `throws` dan dua caller-nya (`OnboardingKeyView.swift`, `KeyEditorSheet.swift`) disesuaikan pakai `try?` — perubahan minimal, sudah dikonfirmasi pemilik produk. Tes trigger OSStatus gagal asli tidak reliabel di Keychain simulator (cenderung permisif), jadi tes memverifikasi kontrak tipe error, bukan jalur gagal nyata.
 - [2026-11-24] L1.4: `Segment.transcribed` tidak dihapus (seharusnya dihapus per plan, D2 = A) karena masih dipakai `Views/Shared/SampleData.swift` (wilayah sesi UI). Ditandai deprecated di komentar. Sesi UI perlu hapus pemakaiannya dulu baru field ini aman dihapus.
 
 ### Mulai dari mana di sesi berikutnya

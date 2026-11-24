@@ -43,10 +43,10 @@ enum APIKeyStore {
         KeychainStore.get(kind.keychainKey)
     }
 
-    static func save(_ value: String, for kind: APIKeyKind) {
+    static func save(_ value: String, for kind: APIKeyKind) throws {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        KeychainStore.set(trimmed, for: kind.keychainKey)
+        try KeychainStore.set(trimmed, for: kind.keychainKey)
     }
 
     static func delete(_ kind: APIKeyKind) {

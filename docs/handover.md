@@ -93,6 +93,7 @@ Aksi yang dipanggil UI: mulai (dengan judul, agenda, istilah), tandai, jeda, lan
 | `Meeting`: processingStep & lastErrorKind/Message (L1.2) | Selesai |
 | `Speaker` + `Meeting.displayName(for:)` (L1.3, D3) | Selesai |
 | `Segment.index`, `Meeting.providerJobId`, komentar relatif waktu di `Utterance` (L1.4) | Selesai. Catatan: `Segment.transcribed` dipertahankan (deprecated) karena masih dipakai `Views/Shared/SampleData.swift` — koordinasikan sebelum dihapus |
+| `KeychainStore.set` jadi `throws` + `kSecAttrService` namespace + `AfterFirstUnlockThisDeviceOnly` (L1.5) | Selesai. `APIKeyStore.save` (Views/Shared, wilayah UI) ikut jadi `throws`; `OnboardingKeyView.swift` dan `KeyEditorSheet.swift` disesuaikan pakai `try?` — koordinasi sudah dilakukan, perubahan minimal |
 | `TranscriptionProvider` protocol | Selesai (skeleton, belum ada implementasi AssemblyAI) |
 | `KeychainStore` | Selesai, ada test |
 | `RecordingConstants` | Selesai |

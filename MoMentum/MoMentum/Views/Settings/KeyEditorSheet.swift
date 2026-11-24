@@ -30,7 +30,7 @@ struct KeyEditorSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Simpan", systemImage: "checkmark") {
-                        APIKeyStore.save(key, for: kind)
+                        try? APIKeyStore.save(key, for: kind)
                         onSaved()
                         dismiss()
                     }

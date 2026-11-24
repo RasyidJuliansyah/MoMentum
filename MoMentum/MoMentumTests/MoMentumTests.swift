@@ -30,11 +30,43 @@ final class MoMentumTests: XCTestCase {
         KeychainStore.delete(.assemblyAIAPIKey)
         XCTAssertNil(KeychainStore.get(.assemblyAIAPIKey))
 
-        KeychainStore.set("test-key-123", for: .assemblyAIAPIKey)
+        try KeychainStore.set("test-key-123", for: .assemblyAIAPIKey)
         XCTAssertEqual(KeychainStore.get(.assemblyAIAPIKey), "test-key-123")
 
         KeychainStore.delete(.assemblyAIAPIKey)
         XCTAssertNil(KeychainStore.get(.assemblyAIAPIKey))
+    }
+
+    // L1.5: item tersimpan dengan kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly dan
+    // kSecAttrService sebagai namespace, supaya key terbaca walau proses jalan saat terkunci.
+    func testKeychainStoreUsesAfterFirstUnlockAccessibleAndServiceNamespace() throws {
+        KeychainStore.delete(.assemblyAIAPIKey)
+        try KeychainStore.set("test-key-123", for: .assemblyAIAPIKey)
+        defer { KeychainStore.delete(.assemblyAIAPIKey) }
+
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: KeychainStore.Key.assemblyAIAPIKey.rawValue,
+            kSecAttrService as String: KeychainStore.service,
+            kSecReturnAttributes as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne,
+        ]
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        XCTAssertEqual(status, errSecSuccess)
+        let attributes = result as? [String: Any]
+        XCTAssertEqual(
+            attributes?[kSecAttrAccessible as String] as? String,
+            kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly as String
+        )
+    }
+
+    // L1.5: KeychainStore.set bisa throws (bukan diam-diam gagal). Error membawa OSStatus asli.
+    // Trigger kegagalan OSStatus nyata tidak bisa disimulasikan andal di simulator (Keychain
+    // simulator cenderung permisif), jadi tes ini memverifikasi kontrak tipe error, bukan jalur gagal.
+    func testKeychainStoreErrorCarriesStatus() {
+        let error = KeychainStore.KeychainError(status: errSecParam)
+        XCTAssertEqual(error.status, errSecParam)
     }
 
     // L1.1: Meeting punya konteks (agenda, istilah, penanda) dan endedAt, lolos round-trip di container in-memory.
