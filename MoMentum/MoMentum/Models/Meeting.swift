@@ -16,6 +16,14 @@ final class Meeting {
     var durationSeconds: Double
     var status: MeetingStatus
 
+    // Konteks meeting (layar 03), dipakai sebagai keyword hint STT dan konteks LLM.
+    var agenda: String?
+    var glossaryTerms: [String] = []
+    /// Penanda momen (tombol Tandai), dalam waktu audio (bukan jam dinding — jeda telepon tidak terekam).
+    var markerOffsets: [TimeInterval] = []
+    /// `nil` berarti rekaman belum ditutup rapi (dipakai untuk pemulihan setelah crash, lihat L2.5).
+    var endedAt: Date?
+
     // Hasil olahan, diisi setelah transkripsi/LLM selesai
     var summaryText: String?
     var momText: String?
