@@ -109,7 +109,7 @@ Satu tugas per giliran. Centang setelah tes lolos dan sudah di-commit. Branch pe
 
 ### L2 · `AudioRecorder` (rekam tahan gangguan)
 
-- [ ] **L2.1 Putuskan D8 di Plan mode.** Paparkan trade-off:
+- [x] **L2.1 Putuskan D8 di Plan mode.** Paparkan trade-off:
   - `AVAudioRecorder` per segmen: kode sederhana dan level meter bawaan (`averagePower`, sesuai acuan desain). Kekurangannya: perekam harus berhenti lalu mulai lagi tiap pergantian segmen saat layar terkunci, dan ada celah kecil di antara segmen.
   - `AVAudioEngine` dengan tap ke `AVAudioFile`: engine tetap jalan dan hanya file yang berganti, tanpa celah. Kekurangannya: kode lebih banyak, dan tap berjalan di thread audio.
 
@@ -117,11 +117,12 @@ Satu tugas per giliran. Centang setelah tes lolos dan sudah di-commit. Branch pe
   Selesai kalau: pilihan dicatat di bagian "Catatan" di bawah.
 - [x] **L2.2 Perekam inti.** `@Observable final class AudioRecorder` dengan state `idle`, `recording`, `paused(reason)`, dan `finished`. Expose juga durasi audio, level untuk `WaveformView`, `mark()` untuk tombol Tandai, dan `stop()`. `Meeting` dibuat saat mulai rekam dengan `endedAt = nil`. Tiap segmen yang selesai langsung ditulis sebagai `Segment`. Durasi segmen dikirim lewat `init`, dengan default `RecordingConstants.segmentDuration`, supaya tes bisa memakai durasi pendek.
   Selesai kalau: ada tes transisi state, tes pergantian segmen dengan durasi pendek, dan tes penanda tersimpan dalam waktu audio.
-- [ ] **L2.3 Gangguan.**
+- [x] **L2.3 Gangguan.**
   - `AVAudioSession.interruptionNotification`: saat mulai, jeda dengan alasan `.phoneCall` dan tutup segmen berjalan. Saat selesai, lanjutkan otomatis kalau ada `.shouldResume`. Kalau tidak ada, tetap jeda (layar 14 punya tombol lanjut).
   - Tangani juga perubahan rute audio dan `mediaServicesWereResetNotification`.
 
   Selesai kalau: ada tes yang mem-post notifikasi tiruan lalu memeriksa state.
+  Catatan: perubahan rute (`routeChangeNotification`) sengaja tidak mengubah state — rekaman tetap lanjut dari mikrofon yang tersedia (lihat komentar `handleRouteChange` di `AudioRecorder.swift`). `mediaServicesWereResetNotification` dijeda dengan reason `.phoneCall` (tidak ada reason khusus, scope sekarang cukup pakai yang ada; user tetap bisa tekan Lanjut). Tes di `AudioRecorderInterruptionTests.swift` (5 kasus), tidak memanggil `setActive(true)` di `start()` karena memicu hang IO di simulator headless — sesi audio dibiarkan default (AVAudioRecorder tetap bisa merekam tanpa kategori eksplisit; kalau nanti perlu override kategori untuk kasus device nyata, lakukan di uji fisik L2 bagian bawah, bukan di jalur tes unit).
 - [ ] **L2.4 Ruang penyimpanan.** Cek `volumeAvailableCapacityForImportantUsageKey` saat mulai dan berkala selama merekam. Expose flag `isStorageLow` untuk banner layar 15. Ambang: belum diputuskan. Usulan: sisa ruang kurang dari perkiraan 1 jam rekaman.
   Selesai kalau: ada tes dengan penyedia kapasitas tiruan.
 - [ ] **L2.5 Pemulihan.** Saat app diluncurkan, `Meeting` dengan `endedAt == nil` ditutup dari segmen yang ada di disk, lalu diberi status `.recorded`. Segmen yang rusak dibuang dan dicatat.

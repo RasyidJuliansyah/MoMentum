@@ -43,6 +43,12 @@ final class AudioRecorder: NSObject {
     init(modelContext: ModelContext, segmentDuration: TimeInterval = RecordingConstants.segmentDuration) {
         self.modelContext = modelContext
         self.segmentDuration = segmentDuration
+        super.init()
+        registerSessionObservers()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 
     // MARK: - Aksi dipanggil UI
@@ -166,6 +172,69 @@ final class AudioRecorder: NSObject {
         } else {
             levels.append(0)
         }
+    }
+
+    // MARK: - Gangguan (L2.3)
+
+    private func registerSessionObservers() {
+        let center = NotificationCenter.default
+        center.addObserver(
+            self, selector: #selector(handleInterruption(_:)),
+            name: AVAudioSession.interruptionNotification, object: nil
+        )
+        center.addObserver(
+            self, selector: #selector(handleRouteChange(_:)),
+            name: AVAudioSession.routeChangeNotification, object: nil
+        )
+        center.addObserver(
+            self, selector: #selector(handleMediaServicesReset(_:)),
+            name: AVAudioSession.mediaServicesWereResetNotification, object: nil
+        )
+    }
+
+    /// Telepon masuk (atau gangguan sistem lain): jeda dengan alasan `.phoneCall` dan tutup
+    /// segmen berjalan. Saat gangguan selesai, lanjut otomatis hanya kalau sistem bilang
+    /// `.shouldResume`; kalau tidak, tetap dijeda (layar 14 punya tombol Lanjut manual).
+    @objc private func handleInterruption(_ notification: Notification) {
+        guard
+            let info = notification.userInfo,
+            let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
+            let type = AVAudioSession.InterruptionType(rawValue: typeValue)
+        else { return }
+
+        switch type {
+        case .began:
+            guard state == .recording else { return }
+            stopTimers()
+            finishCurrentSegment()
+            state = .paused(.phoneCall)
+        case .ended:
+            guard state == .paused(.phoneCall) else { return }
+            let optionsValue = info[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
+            let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+            if options.contains(.shouldResume) {
+                resume()
+            }
+        @unknown default:
+            break
+        }
+    }
+
+    /// Perubahan rute (headset lepas, dst). Tidak memaksa jeda — recorder tetap merekam dari
+    /// mikrofon yang tersedia, cuma dicatat untuk kemungkinan diagnosa nanti.
+    @objc private func handleRouteChange(_ notification: Notification) {
+        // Sengaja tidak mengubah state: perubahan rute input bukan gangguan rekaman (D8 scope).
+    }
+
+    /// Daemon audio sistem reset (jarang terjadi) — recorder dan sesi lama sudah tidak valid.
+    /// Tutup segmen berjalan, jeda, user perlu menekan Lanjut untuk memulai sesi/segmen baru.
+    @objc private func handleMediaServicesReset(_ notification: Notification) {
+        guard state == .recording else { return }
+        stopTimers()
+        recorder = nil // sesi lama sudah tidak valid, jangan panggil .stop() padanya
+        currentSegment?.durationSeconds = elapsed - currentSegmentStartElapsed
+        currentSegment = nil
+        state = .paused(.phoneCall)
     }
 
     static func segmentsDirectory() -> URL {
