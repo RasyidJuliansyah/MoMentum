@@ -100,4 +100,48 @@ final class MoMentumTests: XCTestCase {
         XCTAssertEqual(meeting.displayName(for: "Speaker 2"), "Speaker 2", "label tanpa Speaker tersimpan tetap mentah")
     }
 
+    // L1.4: hapus Meeting ikut menghapus segment, utterance, action item, dan speaker (cascade).
+    func testDeletingMeetingCascadesToChildren() throws {
+        let context = try makeInMemoryContext()
+        let meeting = Meeting(title: "Retro Sprint 9")
+        let segment = Segment(fileName: "seg1.m4a", index: 0)
+        let utterance = Utterance(speakerLabel: "Speaker 1", startMs: 0, endMs: 500, text: "Oke")
+        segment.utterances = [utterance]
+        meeting.segments = [segment]
+        meeting.actionItems = [ActionItem(task: "Tulis notulen", pic: "Budi")]
+        meeting.speakers = [Speaker(label: "Speaker 1", name: "Budi")]
+        context.insert(meeting)
+        try context.save()
+
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<Segment>()), 1)
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<Utterance>()), 1)
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<ActionItem>()), 1)
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<Speaker>()), 1)
+
+        context.delete(meeting)
+        try context.save()
+
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<Segment>()), 0)
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<Utterance>()), 0)
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<ActionItem>()), 0)
+        XCTAssertEqual(try context.fetchCount(FetchDescriptor<Speaker>()), 0)
+    }
+
+    // L1.4: index Segment dan providerJobId Meeting tersimpan dan terbaca kembali.
+    func testSegmentIndexAndMeetingProviderJobIdRoundTrip() throws {
+        let context = try makeInMemoryContext()
+        let meeting = Meeting(title: "Daily Standup")
+        meeting.providerJobId = "job-abc-123"
+        meeting.segments = [
+            Segment(fileName: "a.m4a", index: 0),
+            Segment(fileName: "b.m4a", index: 1),
+        ]
+        context.insert(meeting)
+        try context.save()
+
+        let fetched = try context.fetch(FetchDescriptor<Meeting>()).first
+        XCTAssertEqual(fetched?.providerJobId, "job-abc-123")
+        XCTAssertEqual(fetched?.segments.sorted(by: { $0.index < $1.index }).map(\.index), [0, 1])
+    }
+
 }

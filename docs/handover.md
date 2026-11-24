@@ -32,6 +32,8 @@ Sudah ada (buatan sesi logic, pakai langsung):
 - `Meeting.displayName(for label:)` (L1.3, D3) — nama tampil speaker: nama yang diganti user (`Speaker.name`) atau label mentah kalau belum diganti. Ganti nama cukup set `speaker.name`, berlaku untuk semua `Utterance` berlabel sama.
 - `Meeting.processingStep: ProcessingStep?` (L1.2) — 4 langkah proses: `.saved`, `.uploaded`, `.transcribing`, `.summarizing`. Tidak ada `unifyingSpeakers` terpisah (D2 = A, diarization sekali jalan di `.transcribing`).
 - `Meeting.lastErrorKind: ProcessingErrorKind?` (`.invalidAPIKey`, `.network`, `.vendor`, `.unknown`) dan `lastErrorMessage: String?` (Bahasa Indonesia) — layar 13.
+- `Segment.index: Int` (L1.4) — urutan segmen, karena relasi SwiftData tidak menjaga urutan.
+- `Meeting.providerJobId: String?` (L1.4) — ID job transkripsi vendor (D2 = A, satu file per meeting), dipakai lanjut polling setelah app ditutup.
 - `MeetingStatus` enum, 5 case: `.recorded`, `.queued`, `.processing`, `.done`, `.failed`. UI tinggal `extension` di `DesignSystem/MeetingStatus+Style.swift` untuk `.label`/`.colors` sesuai `design-handoff.md` bagian 7. **Jangan bikin enum status baru.**
 - `TranscriptionProvider` protocol — `Services/TranscriptionProvider.swift`
 - `KeychainStore` (enum, static methods `set`/`get`/`delete`) — `Services/KeychainStore.swift`
@@ -90,6 +92,7 @@ Aksi yang dipanggil UI: mulai (dengan judul, agenda, istilah), tandai, jeda, lan
 | `Meeting`: agenda/istilah/penanda momen/endedAt (L1.1) | Selesai |
 | `Meeting`: processingStep & lastErrorKind/Message (L1.2) | Selesai |
 | `Speaker` + `Meeting.displayName(for:)` (L1.3, D3) | Selesai |
+| `Segment.index`, `Meeting.providerJobId`, komentar relatif waktu di `Utterance` (L1.4) | Selesai. Catatan: `Segment.transcribed` dipertahankan (deprecated) karena masih dipakai `Views/Shared/SampleData.swift` — koordinasikan sebelum dihapus |
 | `TranscriptionProvider` protocol | Selesai (skeleton, belum ada implementasi AssemblyAI) |
 | `KeychainStore` | Selesai, ada test |
 | `RecordingConstants` | Selesai |

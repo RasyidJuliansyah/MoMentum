@@ -42,6 +42,9 @@ final class Meeting {
     var endedAt: Date?
 
     // Status proses (layar 04/05/13).
+    /// ID job transkripsi vendor (D2 = A, satu file per meeting). Dipakai untuk lanjut
+    /// polling setelah app ditutup, supaya tidak upload ulang (hemat biaya).
+    var providerJobId: String?
     var processingStep: ProcessingStep?
     var lastErrorKind: ProcessingErrorKind?
     /// Pesan error dalam Bahasa Indonesia untuk ditampilkan ke user.
