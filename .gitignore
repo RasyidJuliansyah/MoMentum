@@ -1,0 +1,25 @@
+node_modules/
+dist/
+build/
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
+.DS_Store
+coverage/
+
+# Spike STT: hasil transkrip dan rekaman meeting jangan di-commit
+spike/stt/results/
+spike/stt/.venv/
+__pycache__/
+.pytest_cache/
+*.m4a
+*.mp3
+*.wav
+
+# Xcode: data per-user dan hasil build
+xcuserdata/
+DerivedData/
+
+# Skill agen pihak ketiga (dipasang per mesin, bukan kode project)
+.agents/
