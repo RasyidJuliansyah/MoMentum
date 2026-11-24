@@ -141,16 +141,19 @@ Uji di perangkat setelah L2 (dikerjakan pemilik, hasil dicatat di bagian F):
 
 ### L3 · Transkripsi AssemblyAI
 
-- [ ] **L3.1 Rapikan kontrak.** Ganti tuple di `TranscriptResult` dengan struct `TranscribedUtterance` (`Sendable`, `Equatable`). Nama ini dipilih supaya tidak bentrok dengan `@Model Utterance`. Tambah parameter opsi ke `TranscriptionProvider.transcribe`: bahasa (`id`), perkiraan jumlah speaker maksimum, dan istilah khusus.
+- [x] **L3.1 Rapikan kontrak.** Ganti tuple di `TranscriptResult` dengan struct `TranscribedUtterance` (`Sendable`, `Equatable`). Nama ini dipilih supaya tidak bentrok dengan `@Model Utterance`. Tambah parameter opsi ke `TranscriptionProvider.transcribe`: bahasa (`id`), perkiraan jumlah speaker maksimum, dan istilah khusus.
   Selesai kalau: build lolos dan tes lama tetap lolos.
-- [ ] **L3.2 `AssemblyAITranscriptionProvider`.** Pakai `URLSession`, tanpa SDK. Alurnya mengikuti spike:
+  Catatan: protokol dipecah jadi `submit(audioFileURL:options:) -> jobId` dan `pollUntilComplete(jobId:) -> TranscriptResult` (bukan satu `transcribe` blocking), supaya `jobId` bisa disimpan ke `Meeting.providerJobId` dan dilanjutkan setelah app ditutup paksa (selaras kontrak `handover.md`). `TranscriptionOptions` (`languageCode` default `"id"`, `maxSpeakersExpected: Int?`, `glossaryTerms: [String]`). `TranscriptionError` jadi 4 case: `missingAPIKey`, `invalidAPIKey`, `network(String)`, `vendor(String)`, `unknown(String)` — sepadan `ProcessingErrorKind` di `Meeting` supaya `MeetingProcessor` (L6) tinggal map 1:1.
+- [x] **L3.2 `AssemblyAITranscriptionProvider`.** Pakai `URLSession`, tanpa SDK. Alurnya mengikuti spike:
   - Upload file secara streaming lewat `upload(for:fromFile:)`, jangan dimuat ke memori.
   - Buat transkrip dengan `speaker_labels: true` dan `language_code: "id"`.
   - Polling tiap 10 detik. Spike mencatat batas 60 request per menit per transkrip.
 
   Polling harus bisa dilanjutkan dari job ID yang tersimpan. Untuk istilah khusus, cek nama field terbaru di dokumentasi AssemblyAI karena field-nya berbeda per model; jangan menebak. Petakan error: 401 menjadi `invalidAPIKey`, status `error` dari vendor menjadi `vendor`, dan masalah koneksi menjadi `network`.
-- [ ] **L3.3 Tes** dengan `URLProtocol` tiruan dan fixture JSON **sintetis**: upload lolos, polling sampai `completed`, polling sampai `error`, dan 401.
-- [ ] **L3.4 Uji manual** dengan key milik sendiri dan rekaman pendek suara sendiri. Rekaman dan hasilnya tidak di-commit.
+  Catatan: field istilah khusus dicek ulang ke dokumentasi resmi AssemblyAI 24 Nov 2026 (`https://www.assemblyai.com/docs/speech-to-text/pre-recorded-audio/custom-vocabulary` dan `https://www.assemblyai.com/docs/api-reference/transcripts/submit`) — field terbaru `keyterms_prompt` (array string), bukan `word_boost` lama (masih ada di skema respons tapi `keyterms_prompt` yang direkomendasikan dokumentasi sekarang). API key diambil dari `KeychainStore.get(.assemblyAIAPIKey)` lewat closure yang bisa diganti di tes. `URLError` (offline, timeout) dipetakan ke `.network` lewat helper `withNetworkErrorMapping`.
+- [x] **L3.3 Tes** dengan `URLProtocol` tiruan dan fixture JSON **sintetis**: upload lolos, polling sampai `completed`, polling sampai `error`, dan 401.
+  Catatan: `AssemblyAITranscriptionProviderTests.swift` (5 kasus) + `MockURLProtocol` di file yang sama (dipakai tes ini saja, tidak terpasang global). 77 tes total, 0 gagal.
+- [ ] **L3.4 Uji manual** dengan key milik sendiri dan rekaman pendek suara sendiri. Rekaman dan hasilnya tidak di-commit. **Butuh dikerjakan pemilik produk** (API key AssemblyAI asli) — ditunda ke sesi uji fisik bersama checklist L2.
 
 ### L4 · Satu label speaker untuk seluruh meeting
 
