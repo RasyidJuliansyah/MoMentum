@@ -38,6 +38,15 @@ final class DetailUITests: XCTestCase {
         attach(app, "08-mom")
         app.buttons["Markdown"].tap()
         attach(app, "08-mom-markdown")
+
+        // Ekspor jadi file PDF lewat share sheet.
+        app.buttons["Ekspor MoM"].tap()
+        XCTAssertTrue(app.buttons["PDF"].waitForExistence(timeout: 3))
+        attach(app, "08-ekspor-menu")
+        app.buttons["PDF"].tap()
+        sleep(2)
+        XCTAssertFalse(app.alerts["File MoM gagal dibuat"].exists, "PDF harus berhasil dibuat")
+        attach(app, "08-ekspor-share-sheet")
     }
 
     @MainActor

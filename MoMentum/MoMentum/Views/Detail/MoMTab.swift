@@ -26,6 +26,7 @@ struct MoMTab: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(true)
+                ExportMoMButton(document: document)
             }
 
             Group {
