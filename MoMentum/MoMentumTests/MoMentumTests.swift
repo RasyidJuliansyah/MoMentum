@@ -59,4 +59,21 @@ final class MoMentumTests: XCTestCase {
         XCTAssertEqual(reFetched?.endedAt, Date(timeIntervalSince1970: 1_700_000_000))
     }
 
+    // L1.2: langkah proses dan jenis error terakhir tersimpan, MeetingStatus tidak diubah.
+    func testMeetingProcessingStepAndErrorRoundTrip() throws {
+        let context = try makeInMemoryContext()
+        let meeting = Meeting(title: "Sprint Planning", status: .failed)
+        meeting.processingStep = .transcribing
+        meeting.lastErrorKind = .invalidAPIKey
+        meeting.lastErrorMessage = "API key STT ditolak (401)."
+        context.insert(meeting)
+        try context.save()
+
+        let fetched = try context.fetch(FetchDescriptor<Meeting>()).first
+        XCTAssertEqual(fetched?.status, .failed)
+        XCTAssertEqual(fetched?.processingStep, .transcribing)
+        XCTAssertEqual(fetched?.lastErrorKind, .invalidAPIKey)
+        XCTAssertEqual(fetched?.lastErrorMessage, "API key STT ditolak (401).")
+    }
+
 }
