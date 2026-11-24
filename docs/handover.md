@@ -43,9 +43,12 @@ Sudah ada (buatan sesi logic, pakai langsung):
 - `AudioMerger.merge(segmentURLs:) async throws -> URL` (L4.1) — `Services/AudioMerger.swift`
 - `SpeakerLabelNormalizer.normalize(_:meeting:context:) -> [TranscribedUtterance]` (L4.2) — `Services/SpeakerLabelNormalizer.swift`
 
+- `SummaryProvider` (D4, L5.1): `summarize(_ input: SummaryInput) async throws -> SummaryResult`. `SummaryInput` (meetingTitle, agenda, glossaryTerms, markerOffsetsMs, transcript pakai nama tampil speaker — bukan label mentah). `SummaryResult` (summaryText, actionItems: `[SummaryActionItem]` punya task/pic/dueDate, momMarkdown). `SummaryError` (`.missingAPIKey/.invalidAPIKey/.network/.vendor/.invalidResponse/.unknown`) — `Services/SummaryProvider.swift`
+- `OpenAICompatibleSummaryProvider` (L5.3) — implementasi generic "OpenAI-compatible chat completions" (D4: bukan vendor tunggal, lihat 3a di bawah soal field Base URL/model) — `Services/OpenAICompatibleSummaryProvider.swift`
+- `SummaryPrompt` (L5.2) — prompt Bahasa Indonesia, `system` + `user(for:)` — `Services/SummaryPrompt.swift`
+
 Menyusul dari sesi logic (nama final, belum ada isinya):
 - `AudioRecorder` — `@Observable`, expose state rekam/jeda/durasi/level audio untuk `WaveformView`
-- `SummaryProvider` — protocol adapter LLM, sepadan pola `TranscriptionProvider`
 
 ### 3a. Data yang dibutuhkan UI dari sesi Logic
 
@@ -82,6 +85,7 @@ Aksi yang dipanggil UI: mulai (dengan judul, agenda, istilah), tandai, jeda, lan
   - Simpan nama speaker (D3) dan daftar nama yang pernah dipakai untuk baris "Saran" di sheet ganti nama. UI memanggil `onSave(nama, generateUlang)`.
 - **Pengaturan 09 dan Onboarding 10–11** (sudah dibangun):
   - UI menyimpan preferensi di `UserDefaults` (lihat `Views/Shared/AppStorageKey.swift`): `monthlyCostLimitUSD` (Double, 0 = tanpa batas, D7) dan `audioRetentionDays` (Int, 0 = selamanya, default 30, D5). Logic membaca kunci yang sama untuk L7.
+  - **D4 diputuskan 24 Nov 2026**: `SummaryProvider` generic "OpenAI-compatible chat completions", bukan vendor tunggal (lihat `Services/OpenAICompatibleSummaryProvider.swift`). `APIKeyKind.summary.providerName` di `Views/Shared/APIKeyStore.swift` ("Penyedia belum dipilih") perlu diperbarui jadi sesuatu seperti "Kompatibel OpenAI · BYOK". Settings 09 butuh 2 field teks baru (bukan sekadar API key): **Base URL** (default `https://api.openai.com/v1`, bisa diisi OpenRouter/Ollama lokal/LiteLLM/dll) dan **nama model** (mis. `gpt-4o-mini`). Simpan di `UserDefaults` biasa (bukan rahasia) — sesi Logic mengusulkan nama kunci `summaryBaseURL`/`summaryModel` di `AppStorageKey.swift`, tapi file itu wilayah UI jadi belum ditambah dari sisi Logic; silakan sesi UI yang menambahkan dan mengabari nama final kalau beda.
   - UI memanggil `KeychainStore` hanya lewat `Views/Shared/APIKeyStore.swift`. L1.5 selesai: `KeychainStore.set` sekarang `throws`, jadi `APIKeyStore.save` juga `throws`. Sudah disesuaikan di `OnboardingKeyView.swift` dan `KeyEditorSheet.swift` (pakai `try?`, abaikan error diam-diam — kalau mau tampilkan pesan error ke user, ganti `try?` jadi `do/catch` di dua file itu).
   - Pemakaian biaya bulan ini (USD dan durasi audio) untuk kartu "Biaya API". Sekarang tampil "Belum tercatat".
   - Cek validitas API key (panggilan ringan ke vendor) supaya UI bisa menampilkan "Valid" seperti di Figma. Sekarang UI hanya menampilkan "Terisi".
@@ -106,7 +110,7 @@ Aksi yang dipanggil UI: mulai (dengan judul, agenda, istilah), tandai, jeda, lan
 | Pemulihan setelah app dibunuh saat merekam (L2.5) | Selesai, otomatis di `init AudioRecorder` — tidak perlu dipanggil UI. Meeting yang kepotong dapat `status = .recorded` dan `endedAt` terisi, jadi muncul normal di Riwayat 04 (tanpa proses lanjut, user perlu tekan "Simpan & proses" manual nanti di L6). Segmen rusak/hilang otomatis dibuang dari `meeting.segments` |
 | Implementasi AssemblyAI di `TranscriptionProvider` (L3.1/L3.2) | Selesai, ada test (5 kasus, `URLProtocol` tiruan). Uji manual dengan API key asli (L3.4) belum — butuh pemilik produk |
 | Penyatuan label speaker antarsegmen (`AudioMerger` L4.1, `SpeakerLabelNormalizer` L4.2) | Selesai, ada test. Uji kualitas rekaman nyata >2 jam (L4.3) belum — butuh pemilik produk |
-| `SummaryProvider` (LLM) | Belum |
+| `SummaryProvider` (LLM, D4 diputuskan generic OpenAI-compatible, L5.1-L5.4) | Selesai, ada test (6 kasus). Field Base URL/nama model di Settings 09 belum ditambah — wilayah sesi UI, lihat 3a |
 | Queue offline + retry | Belum |
 | `Views/`, `DesignSystem/` | Berjalan (sesi UI, branch `feat/ui-design-system`). Selesai dengan data sementara: DesignSystem, Beranda 01, Merekam 02/14/15, Simpan 03, Riwayat 04/12, Memproses 05, Proses gagal 13, Detail 06–08, Pengaturan 09, Onboarding 10–11. Semua layar Figma sudah dibangun; tinggal disambungkan ke service Logic (lihat 3a) |
 
