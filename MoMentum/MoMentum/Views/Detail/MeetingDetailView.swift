@@ -135,16 +135,6 @@ enum MoMFormat: String, CaseIterable, Identifiable {
     }
 }
 
-/// Ikon kecil + teks dengan jarak rapat, untuk baris meta.
-struct CompactLabelStyle: LabelStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        HStack(spacing: 4) {
-            configuration.icon
-            configuration.title
-        }
-    }
-}
-
 #Preview(traits: .sampleData) {
     @Previewable @State var meeting = Meeting.previewSamples()[2]
     NavigationStack {

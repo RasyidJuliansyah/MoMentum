@@ -71,6 +71,12 @@ Aksi yang dipanggil UI: mulai (dengan judul, agenda, istilah), tandai, jeda, lan
   - Topik dan keputusan MoM sebagai daftar terstruktur (`[String]`), dari hasil `SummaryProvider`. UI menyusun MoM teks dan Markdown sendiri dari data ini (`Views/Detail/MoMDocument.swift`).
   - Waktu selesai proses ("Diproses 21 Nov, 16:42") dan jumlah penanda momen ("2 momen ditandai").
   - Simpan nama speaker (D3) dan daftar nama yang pernah dipakai untuk baris "Saran" di sheet ganti nama. UI memanggil `onSave(nama, generateUlang)`.
+- **Pengaturan 09 dan Onboarding 10–11** (sudah dibangun):
+  - UI menyimpan preferensi di `UserDefaults` (lihat `Views/Shared/AppStorageKey.swift`): `monthlyCostLimitUSD` (Double, 0 = tanpa batas, D7) dan `audioRetentionDays` (Int, 0 = selamanya, default 30, D5). Logic membaca kunci yang sama untuk L7.
+  - UI memanggil `KeychainStore` hanya lewat `Views/Shared/APIKeyStore.swift`. Kalau L1.5 mengubah signature `set`, kabari sesi UI; cukup file itu yang disesuaikan.
+  - Pemakaian biaya bulan ini (USD dan durasi audio) untuk kartu "Biaya API". Sekarang tampil "Belum tercatat".
+  - Cek validitas API key (panggilan ringan ke vendor) supaya UI bisa menampilkan "Valid" seperti di Figma. Sekarang UI hanya menampilkan "Terisi".
+  - Izin mikrofon diminta di onboarding (`AVAudioApplication.requestRecordPermission`). `AudioRecorder` tetap perlu memeriksa izin sebelum merekam, karena user bisa melewati atau menolak.
 - Layar 05 kini menulis "App boleh ditutup. Proses tetap jalan dan kamu dapat notifikasi saat MoM siap." sesuai Figma, karena D9 sudah diputuskan (PRD: "Proses di background" dan "Notifikasi MoM siap"). Kalimat ini baru benar setelah L6.2 selesai. Ketuk notifikasi harus membuka Detail meeting; UI butuh cara membuka meeting dari ID (misalnya `persistentModelID`).
 
 ## 4. Status progres
@@ -86,7 +92,7 @@ Aksi yang dipanggil UI: mulai (dengan judul, agenda, istilah), tandai, jeda, lan
 | Penyatuan label speaker antarsegmen | Belum |
 | `SummaryProvider` (LLM) | Belum |
 | Queue offline + retry | Belum |
-| `Views/`, `DesignSystem/` | Berjalan (sesi UI, branch `feat/ui-design-system`). Selesai dengan data sementara: DesignSystem, Beranda 01, Merekam 02/14/15, Simpan 03, Riwayat 04/12, Memproses 05, Proses gagal 13, Detail 06–08. Belum: Pengaturan 09, Onboarding 10–11 |
+| `Views/`, `DesignSystem/` | Berjalan (sesi UI, branch `feat/ui-design-system`). Selesai dengan data sementara: DesignSystem, Beranda 01, Merekam 02/14/15, Simpan 03, Riwayat 04/12, Memproses 05, Proses gagal 13, Detail 06–08, Pengaturan 09, Onboarding 10–11. Semua layar Figma sudah dibangun; tinggal disambungkan ke service Logic (lihat 3a) |
 
 Update tabel ini manual tiap ada item selesai — bukan otomatis.
 

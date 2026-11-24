@@ -5,6 +5,12 @@ import SwiftUI
 struct ContentView: View {
     @AppStorage(AppStorageKey.hasCompletedOnboarding) private var hasCompletedOnboarding = false
 
+    init() {
+        #if DEBUG
+        UITestSupport.resetDefaultsIfRequested()
+        #endif
+    }
+
     var body: some View {
         Group {
             if hasCompletedOnboarding {

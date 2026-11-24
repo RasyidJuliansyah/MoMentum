@@ -31,6 +31,14 @@ enum MFormat {
         return megabytes.formatted(.number.precision(.fractionLength(0)).locale(indonesian)) + " MB"
     }
 
+    /// Dolar AS gaya Figma: "$10" untuk bilangan bulat, "$3,20" kalau ada sen.
+    static func usd(_ amount: Double) -> String {
+        let indonesian = Locale(identifier: "id_ID")
+        let isWhole = amount.rounded() == amount
+        let number = amount.formatted(.number.precision(.fractionLength(isWhole ? 0 : 2)).locale(indonesian))
+        return "$" + number
+    }
+
     /// Kalimat untuk VoiceOver, misalnya "1 jam 12 menit 48 detik".
     static func spokenDuration(_ seconds: TimeInterval) -> String {
         let total = max(0, Int(seconds))

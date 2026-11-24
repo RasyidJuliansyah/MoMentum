@@ -1,19 +1,18 @@
 import SwiftUI
 
-/// Placeholder alur onboarding (layar 10 API key → 11 izin mikrofon). Dibangun di tugas UI berikutnya.
+/// Alur peluncuran pertama: 10 API key → 11 izin mikrofon → TabView (design-handoff.md bagian 9).
 struct OnboardingView: View {
     let onFinish: () -> Void
 
+    @State private var showsMicrophoneStep = false
+
     var body: some View {
-        ContentUnavailableView {
-            Label("Onboarding", systemImage: "key")
-        } description: {
-            Text("Layar API key dan izin mikrofon menyusul.")
-        } actions: {
-            Button("Lewati untuk sekarang", action: onFinish)
-                .buttonStyle(.borderedProminent)
+        NavigationStack {
+            OnboardingKeyView { showsMicrophoneStep = true }
+                .navigationDestination(isPresented: $showsMicrophoneStep) {
+                    OnboardingMicView(onFinish: onFinish)
+                }
         }
-        .screenBackground(MBackground.deep)
     }
 }
 

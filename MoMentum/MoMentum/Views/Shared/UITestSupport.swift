@@ -12,6 +12,16 @@ enum UITestSupport {
 
     static let requestedSeed: Seed? = UserDefaults.standard.string(forKey: "uiTestData").flatMap(Seed.init)
 
+    /// Argumen `-uiTestResetDefaults`: hapus status onboarding dan nama yang tersimpan, supaya UI test
+    /// onboarding selalu mulai dari awal. Tidak memakai `-hasCompletedOnboarding NO` karena argumen
+    /// peluncuran selalu menang atas nilai yang ditulis app, jadi onboarding tidak pernah terlihat selesai.
+    static func resetDefaultsIfRequested() {
+        guard ProcessInfo.processInfo.arguments.contains("-uiTestResetDefaults") else { return }
+        for key in [AppStorageKey.hasCompletedOnboarding, AppStorageKey.userName] {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+    }
+
     static let container: ModelContainer? = {
         guard let seed = requestedSeed else { return nil }
         let container = try? ModelContainer(
