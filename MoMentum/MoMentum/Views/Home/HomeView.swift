@@ -3,11 +3,12 @@ import SwiftUI
 
 /// Layar 01 Beranda (Figma node 13:29).
 struct HomeView: View {
+    /// Minta layar rekam dibuka (oleh `MainTabView`) dengan konteks opsional.
+    var onRecord: (MeetingContextDraft?) -> Void = { _ in }
     var onOpenSettings: () -> Void = {}
 
     @Query(sort: \Meeting.createdAt, order: .reverse) private var meetings: [Meeting]
     @AppStorage(AppStorageKey.userName) private var userName = ""
-    @State private var isRecording = false
     @State private var isEditingContext = false
     /// Konteks yang diisi sebelum rekam lewat tombol "Isi judul, agenda & istilah dulu".
     @State private var pendingContext: MeetingContextDraft?
@@ -28,11 +29,6 @@ struct HomeView: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .screenBackground(MBackground.deep)
-        .fullScreenCover(isPresented: $isRecording) {
-            RecordingView(context: pendingContext) {
-                pendingContext = nil
-            }
-        }
         .sheet(isPresented: $isEditingContext) {
             MeetingContextSheet(initial: pendingContext ?? MeetingContextDraft()) { draft in
                 pendingContext = draft
@@ -96,7 +92,10 @@ struct HomeView: View {
             HStack(spacing: MSpace.xs) {
                 WaveformView(levels: WaveformView.decorativeLevels(count: 14))
                     .frame(height: 64)
-                RecordButton { isRecording = true }
+                RecordButton {
+                    onRecord(pendingContext)
+                    pendingContext = nil
+                }
                 WaveformView(levels: WaveformView.decorativeLevels(count: 14, seed: 5))
                     .frame(height: 64)
             }

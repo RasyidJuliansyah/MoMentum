@@ -1,10 +1,9 @@
 import SwiftUI
 
-/// Alur rekam: layar 02 (fullScreenCover dari Beranda) → Stop → sheet 03 Simpan rekaman.
+/// Alur rekam: layar 02 (fullScreenCover dari `MainTabView`) → Stop → sheet 03 Simpan rekaman.
 /// Stop menjeda rekaman dulu; Batal di sheet kembali ke layar rekam dalam keadaan dijeda.
 struct RecordingView: View {
     var context: MeetingContextDraft?
-    var onFinish: () -> Void = {}
 
     @Environment(\.dismiss) private var dismiss
     // TODO(UI): ganti dengan `AudioRecorder` dari Services setelah PLAN-logic.md L2 selesai.
@@ -13,9 +12,8 @@ struct RecordingView: View {
     @State private var isSaving = false
     private let startedAt: Date
 
-    init(context: MeetingContextDraft? = nil, onFinish: @escaping () -> Void = {}) {
+    init(context: MeetingContextDraft? = nil) {
         self.context = context
-        self.onFinish = onFinish
         let now = Date.now
         startedAt = now
         let draft = context ?? MeetingContextDraft()
@@ -44,7 +42,6 @@ struct RecordingView: View {
                 onSave: { _, _ in
                     // TODO(UI): simpan ke Meeting dan buka layar 05 Memproses setelah service Logic tersedia.
                     driver.finish()
-                    onFinish()
                     dismiss()
                 },
                 onCancel: { isSaving = false }

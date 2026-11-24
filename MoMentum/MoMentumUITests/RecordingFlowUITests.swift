@@ -11,7 +11,7 @@ final class RecordingFlowUITests: XCTestCase {
     @MainActor
     func testRecordStopSaveFlow() throws {
         let app = XCUIApplication()
-        app.launchArguments += ["-hasCompletedOnboarding", "YES", "-userName", "Rasyid"]
+        app.launchArguments += ["-hasCompletedOnboarding", "YES", "-userName", "Rasyid", "-uiTestData", "empty"]
         app.launch()
 
         attach(app, "01-beranda")
@@ -46,7 +46,7 @@ final class RecordingFlowUITests: XCTestCase {
     @MainActor
     func testContextFromHomeIsUsedInRecording() throws {
         let app = XCUIApplication()
-        app.launchArguments += ["-hasCompletedOnboarding", "YES"]
+        app.launchArguments += ["-hasCompletedOnboarding", "YES", "-uiTestData", "empty"]
         app.launch()
 
         app.buttons["Isi judul, agenda & istilah dulu"].tap()

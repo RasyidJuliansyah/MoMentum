@@ -17,6 +17,9 @@ struct ContentView: View {
         }
         // Desain belum punya mode gelap (design-handoff.md bagian 10).
         .preferredColorScheme(.light)
+        #if DEBUG
+        .uiTestModelContainer()
+        #endif
     }
 }
 
