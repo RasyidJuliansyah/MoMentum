@@ -98,6 +98,8 @@ Aksi yang dipanggil UI: mulai (dengan judul, agenda, istilah), tandai, jeda, lan
 | `KeychainStore` | Selesai, ada test |
 | `RecordingConstants` | Selesai |
 | `AudioRecorder` (L2.2, D8 = A `AVAudioRecorder`) | Selesai: state `idle/recording/paused(reason)/finished`, `elapsed`, `segmentNumber`, `levels`, `markers`, `mark()`, `pause()/resume()`, `stop()`. `Meeting`/`Segment` ditulis langsung lewat `ModelContext` yang dikirim di `init`. UI tinggal baca properti ini untuk `RecordingSnapshot` |
+| `AudioRecorder.isStorageLow`/`storageRemainingBytes`/`storageRemainingHours` (L2.4, D10) | Selesai. Ambang < 1 jam rekaman (~28,8 MB). Nama sama persis dengan `RecordingSnapshot`, tinggal pasang |
+| Pemulihan setelah app dibunuh saat merekam (L2.5) | Selesai, otomatis di `init AudioRecorder` — tidak perlu dipanggil UI. Meeting yang kepotong dapat `status = .recorded` dan `endedAt` terisi, jadi muncul normal di Riwayat 04 (tanpa proses lanjut, user perlu tekan "Simpan & proses" manual nanti di L6). Segmen rusak/hilang otomatis dibuang dari `meeting.segments` |
 | Implementasi AssemblyAI di `TranscriptionProvider` | Belum |
 | Penyatuan label speaker antarsegmen | Belum |
 | `SummaryProvider` (LLM) | Belum |

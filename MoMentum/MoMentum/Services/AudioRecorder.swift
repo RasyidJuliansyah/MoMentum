@@ -64,6 +64,7 @@ final class AudioRecorder: NSObject {
         self.availableCapacityProvider = availableCapacityProvider
         super.init()
         registerSessionObservers()
+        Self.recoverUnfinishedMeetings(in: modelContext)
     }
 
     /// Default provider: `volumeAvailableCapacityForImportantUsageKey` dari folder Documents.
@@ -278,6 +279,35 @@ final class AudioRecorder: NSObject {
         currentSegment?.durationSeconds = elapsed - currentSegmentStartElapsed
         currentSegment = nil
         state = .paused(.phoneCall)
+    }
+
+    // MARK: - Pemulihan (L2.5)
+
+    /// Dipanggil sekali di `init`. Menutup rapi `Meeting` yang `endedAt == nil` (app dibunuh
+    /// saat merekam): segmen yang filenya ada dan bisa dibaca dipertahankan, segmen rusak/hilang
+    /// dibuang dari model dan filenya dihapus kalau masih ada. Meeting lalu diberi status `.recorded`
+    /// dan `endedAt` diisi, supaya tidak dianggap "sedang merekam" lagi dan user bisa proses manual.
+    static func recoverUnfinishedMeetings(in context: ModelContext) {
+        let unfinished = FetchDescriptor<Meeting>(predicate: #Predicate { $0.endedAt == nil })
+        guard let meetings = try? context.fetch(unfinished), !meetings.isEmpty else { return }
+
+        for meeting in meetings {
+            var validDuration: Double = 0
+            for segment in meeting.segments {
+                let url = segmentsDirectory().appendingPathComponent(segment.fileName)
+                if let player = try? AVAudioPlayer(contentsOf: url) {
+                    segment.durationSeconds = player.duration
+                    validDuration += player.duration
+                } else {
+                    try? FileManager.default.removeItem(at: url)
+                    meeting.segments.removeAll { $0.persistentModelID == segment.persistentModelID }
+                    context.delete(segment)
+                }
+            }
+            meeting.durationSeconds = validDuration
+            meeting.endedAt = .now
+            meeting.status = .recorded
+        }
     }
 
     static func segmentsDirectory() -> URL {
