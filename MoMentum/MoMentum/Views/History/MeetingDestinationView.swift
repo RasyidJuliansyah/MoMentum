@@ -8,11 +8,7 @@ struct MeetingDestinationView: View {
     var body: some View {
         switch meeting.status {
         case .done:
-            // TODO(UI): ganti dengan MeetingDetailView (layar 06–08).
-            ContentUnavailableView("Detail meeting", systemImage: "doc.text", description: Text("Ringkasan, action items, transkrip, dan MoM menyusul."))
-                .navigationTitle(meeting.title)
-                .navigationBarTitleDisplayMode(.inline)
-                .screenBackground(MBackground.light)
+            MeetingDetailView(meeting: meeting)
         case .recorded, .queued, .processing, .failed:
             ProcessingView(meeting: meeting)
         }

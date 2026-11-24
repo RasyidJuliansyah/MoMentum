@@ -66,6 +66,12 @@ Aksi yang dipanggil UI: mulai (dengan judul, agenda, istilah), tandai, jeda, lan
 - Pemutar audio untuk tombol putar di sheet 03. Belum ada di PLAN-logic.
 - Status per segmen untuk grid layar 13 (selesai, gagal, menunggu). Saat ini UI memakai `Segment.transcribed` dan menganggap segmen pertama yang belum selesai sebagai tempat gagal. Kalau D2 = A (gabung jadi satu file sebelum upload), grid ini perlu diganti; kabari sesi UI.
 - Ukuran file per segmen dan jumlah segmen yang sudah terunggah, untuk keterangan langkah di layar 05 ("8 segmen · 412 MB di iPhone", "8/8 ke layanan STT").
+- **Layar Detail 06–08** (sudah dibangun, `Views/Detail/`). Yang belum bisa tampil karena data belum ada:
+  - Urutan action item. Relasi SwiftData tidak menjaga urutan, jadi `ActionItem` perlu field urutan (misalnya `order: Int` sesuai output LLM).
+  - Status selesai action item (`isDone`) untuk checkbox di layar 06.
+  - Topik dan keputusan MoM sebagai daftar terstruktur (`[String]`), dari hasil `SummaryProvider`. UI menyusun MoM teks dan Markdown sendiri dari data ini (`Views/Detail/MoMDocument.swift`).
+  - Waktu selesai proses ("Diproses 21 Nov, 16:42") dan jumlah penanda momen ("2 momen ditandai").
+  - Simpan nama speaker (D3) dan daftar nama yang pernah dipakai untuk baris "Saran" di sheet ganti nama. UI memanggil `onSave(nama, generateUlang)`.
 - Desain layar 05 menulis "App boleh ditutup. Proses tetap jalan dan kamu dapat notifikasi saat MoM siap." UI belum memakai kalimat itu sampai D9 (proses di background) dan notifikasi diputuskan.
 
 ## 4. Status progres
@@ -81,7 +87,7 @@ Aksi yang dipanggil UI: mulai (dengan judul, agenda, istilah), tandai, jeda, lan
 | Penyatuan label speaker antarsegmen | Belum |
 | `SummaryProvider` (LLM) | Belum |
 | Queue offline + retry | Belum |
-| `Views/`, `DesignSystem/` | Berjalan (sesi UI, branch `feat/ui-design-system`). Selesai dengan data sementara: DesignSystem, Beranda 01, Merekam 02/14/15, Simpan 03, Riwayat 04/12, Memproses 05, Proses gagal 13 |
+| `Views/`, `DesignSystem/` | Berjalan (sesi UI, branch `feat/ui-design-system`). Selesai dengan data sementara: DesignSystem, Beranda 01, Merekam 02/14/15, Simpan 03, Riwayat 04/12, Memproses 05, Proses gagal 13, Detail 06–08. Belum: Pengaturan 09, Onboarding 10–11 |
 
 Update tabel ini manual tiap ada item selesai — bukan otomatis.
 
