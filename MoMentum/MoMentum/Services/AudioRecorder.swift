@@ -28,9 +28,23 @@ final class AudioRecorder: NSObject {
     private(set) var levels: [Double] = []
     /// Penanda momen (tombol Tandai), dalam waktu audio.
     private(set) var markers: [TimeInterval] = []
+    /// L2.4: sisa ruang disk kurang dari `RecordingConstants.lowStorageThresholdBytes`. Banner layar 15.
+    private(set) var isStorageLow: Bool = false
+    /// Sisa ruang disk dalam byte. `nil` kalau belum dicek atau gagal baca. Dipetakan ke
+    /// `RecordingSnapshot.storageRemainingBytes` (kontrak UI, lihat docs/handover.md bagian 4).
+    private(set) var storageRemainingBytes: Int64?
+    /// Perkiraan sisa ruang dalam jam rekaman (bitrate D8). `nil` kalau `storageRemainingBytes` nil.
+    var storageRemainingHours: Int? {
+        guard let storageRemainingBytes else { return nil }
+        let bytesPerHour = Int64(RecordingConstants.audioBitRateBps / 8) * 3600
+        return Int(storageRemainingBytes / bytesPerHour)
+    }
 
     private let modelContext: ModelContext
     private let segmentDuration: TimeInterval
+    /// Byte tersisa yang "penting untuk pemakaian" (`volumeAvailableCapacityForImportantUsageKey`).
+    /// Injectable supaya tes bisa memberi nilai tiruan tanpa bergantung disk simulator asli.
+    private let availableCapacityProvider: () -> Int64?
     private(set) var meeting: Meeting?
     private var recorder: AVAudioRecorder?
     private var currentSegment: Segment?
@@ -39,12 +53,24 @@ final class AudioRecorder: NSObject {
     private var segmentTimer: Timer?
 
     /// `segmentDuration` dikirim lewat init (default `RecordingConstants.segmentDuration`)
-    /// supaya tes bisa memakai durasi pendek.
-    init(modelContext: ModelContext, segmentDuration: TimeInterval = RecordingConstants.segmentDuration) {
+    /// supaya tes bisa memakai durasi pendek. `availableCapacityProvider` sama alasannya untuk L2.4.
+    init(
+        modelContext: ModelContext,
+        segmentDuration: TimeInterval = RecordingConstants.segmentDuration,
+        availableCapacityProvider: @escaping () -> Int64? = AudioRecorder.systemAvailableCapacity
+    ) {
         self.modelContext = modelContext
         self.segmentDuration = segmentDuration
+        self.availableCapacityProvider = availableCapacityProvider
         super.init()
         registerSessionObservers()
+    }
+
+    /// Default provider: `volumeAvailableCapacityForImportantUsageKey` dari folder Documents.
+    static func systemAvailableCapacity() -> Int64? {
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let values = try? documents.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
+        return values?.volumeAvailableCapacityForImportantUsage
     }
 
     deinit {
@@ -64,6 +90,7 @@ final class AudioRecorder: NSObject {
         segmentNumber = 1
         levels = []
         markers = []
+        checkStorage()
         startSegment()
         state = .recording
         startTimers()
@@ -112,7 +139,7 @@ final class AudioRecorder: NSObject {
             AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
             AVSampleRateKey: 44_100,
             AVNumberOfChannelsKey: 1,
-            AVEncoderBitRateKey: 64_000,
+            AVEncoderBitRateKey: RecordingConstants.audioBitRateBps,
         ]
         let segment = Segment(fileName: fileName, index: segmentNumber - 1)
         meeting.segments.append(segment)
@@ -172,6 +199,22 @@ final class AudioRecorder: NSObject {
         } else {
             levels.append(0)
         }
+        // Cek tiap ~5 detik (25 tick @ 0.2s), bukan tiap tick — cukup berkala, hindari syscall berlebih.
+        if levels.count % 25 == 0 {
+            checkStorage()
+        }
+    }
+
+    /// L2.4: perbarui `isStorageLow` dari `availableCapacityProvider`. `nil` (gagal baca disk)
+    /// dianggap tidak low — tidak ada info lebih baik daripada menakut-nakuti user tanpa dasar.
+    private func checkStorage() {
+        guard let bytes = availableCapacityProvider() else {
+            isStorageLow = false
+            storageRemainingBytes = nil
+            return
+        }
+        storageRemainingBytes = bytes
+        isStorageLow = bytes < RecordingConstants.lowStorageThresholdBytes
     }
 
     // MARK: - Gangguan (L2.3)
