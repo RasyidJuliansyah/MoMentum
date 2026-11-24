@@ -23,3 +23,6 @@ DerivedData/
 
 # Skill agen pihak ketiga (dipasang per mesin, bukan kode project)
 .agents/
+
+# Konfigurasi lokal SweetPad (VS Code), berisi path mesin ini
+buildServer.json

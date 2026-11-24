@@ -9,6 +9,8 @@ struct HomeView: View {
     @AppStorage(AppStorageKey.userName) private var userName = ""
     @State private var isRecording = false
     @State private var isEditingContext = false
+    /// Konteks yang diisi sebelum rekam lewat tombol "Isi judul, agenda & istilah dulu".
+    @State private var pendingContext: MeetingContextDraft?
 
     var body: some View {
         ScrollView {
@@ -27,12 +29,14 @@ struct HomeView: View {
         .scrollBounceBehavior(.basedOnSize)
         .screenBackground(MBackground.deep)
         .fullScreenCover(isPresented: $isRecording) {
-            RecordingView()
+            RecordingView(context: pendingContext) {
+                pendingContext = nil
+            }
         }
         .sheet(isPresented: $isEditingContext) {
-            // TODO(UI): ganti dengan form konteks meeting (judul, agenda, istilah) saat layar 03 dibangun.
-            ContentUnavailableView("Konteks meeting", systemImage: "tag", description: Text("Form judul, agenda, dan istilah menyusul."))
-                .presentationDetents([.medium])
+            MeetingContextSheet(initial: pendingContext ?? MeetingContextDraft()) { draft in
+                pendingContext = draft
+            }
         }
     }
 
@@ -104,11 +108,18 @@ struct HomeView: View {
             Button {
                 isEditingContext = true
             } label: {
-                Label("Isi judul, agenda & istilah dulu", systemImage: "plus")
-                    .font(.footnote.weight(.medium))
-                    .foregroundStyle(MColor.brand700)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
+                Group {
+                    if let pendingContext {
+                        Label(pendingContext.resolvedTitle(), systemImage: "pencil")
+                            .lineLimit(1)
+                    } else {
+                        Label("Isi judul, agenda & istilah dulu", systemImage: "plus")
+                    }
+                }
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(MColor.brand700)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
             }
             .buttonStyle(.plain)
             .glassEffect(.regular.interactive(), in: .capsule)

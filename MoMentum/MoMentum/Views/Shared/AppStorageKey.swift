@@ -2,4 +2,5 @@
 enum AppStorageKey {
     static let hasCompletedOnboarding = "hasCompletedOnboarding"
     static let userName = "userName"
+    static let autoProcessWhenOnline = "autoProcessWhenOnline"
 }

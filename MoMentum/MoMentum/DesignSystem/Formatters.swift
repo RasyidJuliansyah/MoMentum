@@ -13,4 +13,19 @@ enum MFormat {
         default: return "\(hours)j \(minutes)m"
         }
     }
+
+    /// Jam digital "01:12:48" untuk timer rekaman dan penanda momen.
+    static func clock(_ seconds: TimeInterval) -> String {
+        let total = max(0, Int(seconds))
+        return String(format: "%02d:%02d:%02d", total / 3600, (total % 3600) / 60, total % 60)
+    }
+
+    /// Kalimat untuk VoiceOver, misalnya "1 jam 12 menit 48 detik".
+    static func spokenDuration(_ seconds: TimeInterval) -> String {
+        let total = max(0, Int(seconds))
+        let parts = [(total / 3600, "jam"), ((total % 3600) / 60, "menit"), (total % 60, "detik")]
+            .filter { $0.0 > 0 }
+            .map { "\($0.0) \($0.1)" }
+        return parts.isEmpty ? "0 detik" : parts.joined(separator: " ")
+    }
 }

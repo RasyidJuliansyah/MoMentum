@@ -1,22 +1,69 @@
 import SwiftUI
 
-/// Placeholder layar 02 Merekam (fullScreenCover dari Beranda). Dibangun di tugas UI berikutnya.
+/// Alur rekam: layar 02 (fullScreenCover dari Beranda) → Stop → sheet 03 Simpan rekaman.
+/// Stop menjeda rekaman dulu; Batal di sheet kembali ke layar rekam dalam keadaan dijeda.
 struct RecordingView: View {
+    var context: MeetingContextDraft?
+    var onFinish: () -> Void = {}
+
     @Environment(\.dismiss) private var dismiss
+    // TODO(UI): ganti dengan `AudioRecorder` dari Services setelah PLAN-logic.md L2 selesai.
+    @State private var driver: RecordingDemoDriver
+    @State private var isConfirmingExit = false
+    @State private var isSaving = false
+    private let startedAt: Date
+
+    init(context: MeetingContextDraft? = nil, onFinish: @escaping () -> Void = {}) {
+        self.context = context
+        self.onFinish = onFinish
+        let now = Date.now
+        startedAt = now
+        let draft = context ?? MeetingContextDraft()
+        _driver = State(initialValue: RecordingDemoDriver(title: draft.resolvedTitle(at: now), agenda: draft.trimmedAgenda))
+    }
 
     var body: some View {
-        ContentUnavailableView {
-            Label("Merekam", systemImage: "mic.fill")
-        } description: {
-            Text("Layar rekam menyusul.")
-        } actions: {
-            Button("Tutup") { dismiss() }
-                .buttonStyle(.bordered)
+        RecordingScreen(
+            snapshot: driver.snapshot,
+            onBack: { isConfirmingExit = true },
+            onMark: driver.mark,
+            onTogglePause: driver.togglePause,
+            onStop: stop
+        )
+        .onAppear { driver.start() }
+        .onDisappear { driver.finish() }
+        .confirmationDialog("Rekaman masih berjalan", isPresented: $isConfirmingExit, titleVisibility: .visible) {
+            Button("Hentikan & simpan") { stop() }
+            Button("Lanjut merekam", role: .cancel) {}
         }
-        .screenBackground(MBackground.deep)
+        .sheet(isPresented: $isSaving) {
+            SaveRecordingSheet(
+                initialDraft: draftForSaving,
+                duration: driver.snapshot.elapsed,
+                levels: driver.snapshot.levels,
+                onSave: { _, _ in
+                    // TODO(UI): simpan ke Meeting dan buka layar 05 Memproses setelah service Logic tersedia.
+                    driver.finish()
+                    onFinish()
+                    dismiss()
+                },
+                onCancel: { isSaving = false }
+            )
+        }
+    }
+
+    private var draftForSaving: MeetingContextDraft {
+        var draft = context ?? MeetingContextDraft()
+        draft.title = draft.resolvedTitle(at: startedAt)
+        return draft
+    }
+
+    private func stop() {
+        driver.pause()
+        isSaving = true
     }
 }
 
 #Preview {
-    RecordingView()
+    RecordingView(context: MeetingContextDraft(title: "Weekly Sync Product", agenda: "review sprint & roadmap Q1"))
 }
