@@ -11,6 +11,10 @@ import SwiftData
 @main
 struct MoMentumApp: App {
     var sharedModelContainer: ModelContainer = {
+        #if DEBUG
+        // UI test: service juga harus memakai database in-memory, bukan data asli di perangkat.
+        if let container = UITestSupport.container { return container }
+        #endif
         let schema = Schema([
             Meeting.self,
             Segment.self,
@@ -29,18 +33,20 @@ struct MoMentumApp: App {
 
     private let meetingProcessor: MeetingProcessor
     private let networkMonitor = NetworkMonitor()
+    /// Satu perekam untuk seluruh app. Jangan dibuat di `body`: `body` dihitung ulang berkali-kali
+    /// dan perekam baru akan memutus rekaman yang sedang berjalan.
+    private let audioRecorder: AudioRecorder
 
     init() {
         let context = sharedModelContainer.mainContext
         let processor = MeetingProcessor(
             modelContext: context,
             transcriptionProvider: AssemblyAITranscriptionProvider(),
-            summaryProvider: OpenAICompatibleSummaryProvider(
-                baseURL: URL(string: "https://api.openai.com/v1")!,
-                model: "gpt-4o-mini"
-            )
+            // Key `sk-ant-` ke Claude, key lain ke endpoint OpenAI-compatible.
+            summaryProvider: AutoSummaryProvider()
         )
         meetingProcessor = processor
+        audioRecorder = AudioRecorder(modelContext: context)
         // D5: retensi 30 hari default (lihat AppStorageKey.audioRetentionDays, wilayah UI).
         // Kunci dibaca langsung di sini karena belum ada constant bersama; kalau sesi UI
         // mengubah nama kunci, sesuaikan string di bawah.
@@ -63,7 +69,7 @@ struct MoMentumApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(AudioRecorder(modelContext: sharedModelContainer.mainContext))
+                .environment(audioRecorder)
                 .environment(meetingProcessor)
                 .environment(networkMonitor)
         }

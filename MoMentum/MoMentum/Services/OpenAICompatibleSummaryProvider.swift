@@ -96,7 +96,8 @@ final class OpenAICompatibleSummaryProvider: SummaryProvider {
         return (usage["prompt_tokens"] as? Int, usage["completion_tokens"] as? Int)
     }
 
-    private static func parseSummaryJSON(_ content: String) throws -> SummaryResult {
+    /// Dipakai juga oleh `AnthropicSummaryProvider` (skema JSON sama, lihat `SummaryPrompt`).
+    static func parseSummaryJSON(_ content: String) throws -> SummaryResult {
         guard let data = content.data(using: .utf8),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         else {
@@ -115,7 +116,8 @@ final class OpenAICompatibleSummaryProvider: SummaryProvider {
             guard let task = item["task"] as? String else { return nil }
             // PIC kosong/hilang dianggap "PIC belum jelas" — jangan menebak nama (aturan PRD).
             let pic = (item["pic"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? "PIC belum jelas"
-            let dueDate = item["dueDate"] as? String
+            // String kosong (skema structured output Claude) sama dengan tidak disebut.
+            let dueDate = (item["dueDate"] as? String).flatMap { $0.isEmpty ? nil : $0 }
             return SummaryActionItem(task: task, pic: pic, dueDate: dueDate)
         }
 

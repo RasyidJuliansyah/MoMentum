@@ -15,11 +15,14 @@ enum APIKeyKind: CaseIterable, Identifiable {
         }
     }
 
-    /// Nama penyedia. Vendor LLM belum diputuskan (PLAN-logic D4).
+    /// Nama penyedia. Ringkasan memilih vendor dari key (`AutoSummaryProvider`): `sk-ant-` ke Claude.
     var providerName: String {
         switch self {
         case .speechToText: "AssemblyAI · diarization"
-        case .summary: "Penyedia belum dipilih"
+        case .summary:
+            AutoSummaryProvider.isAnthropicKey(APIKeyStore.key(for: .summary))
+                ? "Anthropic · Claude Opus 5.5"
+                : "Anthropic (sk-ant-…) atau OpenAI"
         }
     }
 

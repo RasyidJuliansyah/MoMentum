@@ -1,7 +1,7 @@
 import XCTest
 
 /// Alur rekam dari Beranda: rekam → tandai → jeda → stop → sheet simpan → batal → stop → simpan.
-/// Rekaman masih memakai `RecordingDemoDriver` (tanpa mikrofon), jadi tes ini aman di simulator.
+/// Memakai `AudioRecorder` asli. Dengan `-uiTestData`, izin mikrofon dilewati dan database in-memory.
 final class RecordingFlowUITests: XCTestCase {
 
     override func setUpWithError() throws {
@@ -40,7 +40,10 @@ final class RecordingFlowUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Simpan & proses"].waitForExistence(timeout: 5))
         app.buttons["Simpan & proses"].tap()
 
-        XCTAssertTrue(app.staticTexts["Ketuk untuk mulai merekam"].waitForExistence(timeout: 5), "Setelah simpan, kembali ke Beranda")
+        // Setelah simpan, Riwayat terbuka dan meeting baru ada di sana.
+        XCTAssertTrue(app.navigationBars["Riwayat"].waitForExistence(timeout: 5), "Setelah simpan, Riwayat terbuka")
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Meeting '")).firstMatch.waitForExistence(timeout: 5))
+        attach(app, "04-riwayat-setelah-simpan")
     }
 
     @MainActor

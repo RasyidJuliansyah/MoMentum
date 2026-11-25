@@ -195,6 +195,48 @@ final class MeetingProcessorTests: XCTestCase {
         XCTAssertEqual(meeting.status, .queued)
         XCTAssertNil(meeting.lastErrorKind, "offline tidak dianggap error permanen")
     }
+
+    // MARK: - Generate ulang gagal lalu Coba lagi
+
+    /// Bug: meeting dengan `processingStep == .summarizing` yang gagal saat generate ulang tidak
+    /// menjalankan langkah apa pun saat Coba lagi, sehingga tertahan di `.processing`.
+    func testRetryAfterFailedRegenerateRunsSummaryAgain() async throws {
+        let context = try makeInMemoryContext()
+        let meeting = Meeting(title: "Retro")
+        meeting.endedAt = .now
+        meeting.processingStep = .summarizing
+        meeting.status = .failed
+        context.insert(meeting)
+
+        let transcription = FakeTranscriptionProvider(submitResult: .success("x"), pollResult: .failure(TranscriptionError.unknown("tidak boleh dipanggil")))
+        let summary = FakeSummaryProvider(result: .success(SummaryResult(summaryText: "Baru.", topics: [], decisions: [], actionItems: [])))
+        let processor = MeetingProcessor(modelContext: context, transcriptionProvider: transcription, summaryProvider: summary, notifier: { _, _ in })
+
+        processor.retry(meeting)
+        await waitUntil { meeting.status == .done }
+
+        XCTAssertEqual(meeting.status, .done)
+        XCTAssertEqual(meeting.summaryText, "Baru.")
+    }
+
+    func testEmptyRecordingFailsWithClearMessage() async throws {
+        let context = try makeInMemoryContext()
+        let meeting = Meeting(title: "Kosong")
+        meeting.endedAt = .now
+        context.insert(meeting)
+        let processor = MeetingProcessor(
+            modelContext: context,
+            transcriptionProvider: FakeTranscriptionProvider(submitResult: .success("x"), pollResult: .failure(TranscriptionError.unknown(""))),
+            summaryProvider: FakeSummaryProvider(result: .failure(SummaryError.unknown(""))),
+            notifier: { _, _ in }
+        )
+
+        processor.process(meeting)
+        await waitUntil { meeting.status == .failed }
+
+        XCTAssertEqual(meeting.status, .failed)
+        XCTAssertTrue(meeting.lastErrorMessage?.contains("Rekaman kosong") ?? false)
+    }
 }
 
 // MARK: - Test doubles

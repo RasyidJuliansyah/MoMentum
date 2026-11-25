@@ -53,20 +53,4 @@ final class RecordingPresentationTests: XCTestCase {
         XCTAssertNil(MeetingContextDraft(agenda: "  ").trimmedAgenda)
         XCTAssertEqual(MeetingContextDraft(agenda: " Review sprint ").trimmedAgenda, "Review sprint")
     }
-
-    // MARK: RecordingDemoDriver
-
-    func testDemoDriverMarkOnlyWhileRecording() {
-        let driver = RecordingDemoDriver(title: "Tes", agenda: nil)
-        driver.mark()
-        XCTAssertEqual(driver.snapshot.markers.count, 1)
-
-        driver.togglePause()
-        XCTAssertEqual(driver.snapshot.phase, .paused(.user))
-        driver.mark()
-        XCTAssertEqual(driver.snapshot.markers.count, 1)
-
-        driver.togglePause()
-        XCTAssertTrue(driver.snapshot.isRecording)
-    }
 }

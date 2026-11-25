@@ -44,6 +44,8 @@ final class AssemblyAITranscriptionProviderTests: XCTestCase {
                 return (200, Data(body.utf8))
             }
             if request.url?.path == "/v2/transcript" {
+                // Bahasa Indonesia hanya didukung universal-2, jadi model wajib ditulis jelas.
+                XCTAssertTrue(Self.bodyText(of: request).contains("universal-2"), "speech_models harus universal-2")
                 let body = #"{"id":"job-123","status":"queued"}"#
                 return (200, Data(body.utf8))
             }
@@ -120,6 +122,24 @@ final class AssemblyAITranscriptionProviderTests: XCTestCase {
         } catch TranscriptionError.invalidAPIKey {
             // sesuai harapan
         }
+    }
+}
+
+extension AssemblyAITranscriptionProviderTests {
+    /// Body request sebagai teks. Lewat `URLSession`, body pindah ke `httpBodyStream`.
+    static func bodyText(of request: URLRequest) -> String {
+        if let body = request.httpBody { return String(decoding: body, as: UTF8.self) }
+        guard let stream = request.httpBodyStream else { return "" }
+        stream.open()
+        defer { stream.close() }
+        var data = Data()
+        var buffer = [UInt8](repeating: 0, count: 4096)
+        while stream.hasBytesAvailable {
+            let read = stream.read(&buffer, maxLength: buffer.count)
+            if read <= 0 { break }
+            data.append(buffer, count: read)
+        }
+        return String(decoding: data, as: UTF8.self)
     }
 }
 

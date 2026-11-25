@@ -1,7 +1,7 @@
 import Foundation
 
 /// Semua yang ditampilkan layar Merekam (02, 14, 15), terlepas dari sumber datanya.
-/// Nanti diisi dari `AudioRecorder` (sesi Logic, PLAN-logic.md L2), sekarang dari `RecordingDemoDriver`.
+/// Diisi dari `AudioRecorder` (lihat `init(recorder:title:agenda:)`).
 struct RecordingSnapshot: Equatable {
     enum PauseReason: Equatable {
         case user
@@ -33,6 +33,25 @@ struct RecordingSnapshot: Equatable {
 }
 
 extension RecordingSnapshot {
+    /// Batas level yang dibawa ke layar (±24 detik). Perekam menyimpan semua level; layar hanya butuh ujungnya.
+    static let visibleLevelCount = 120
+
+    init(recorder: AudioRecorder, title: String, agenda: String?) {
+        self.init(title: recorder.meeting?.title ?? title, agenda: recorder.meeting?.agenda ?? agenda)
+        switch recorder.state {
+        case .paused(.user), .finished: phase = .paused(.user)
+        case .paused(.phoneCall): phase = .paused(.phoneCall)
+        case .idle, .recording: phase = .recording
+        }
+        elapsed = recorder.elapsed
+        segmentNumber = recorder.segmentNumber
+        levels = Array(recorder.levels.suffix(Self.visibleLevelCount))
+        markers = recorder.markers
+        storageRemainingHours = recorder.storageRemainingHours
+        storageRemainingBytes = recorder.storageRemainingBytes
+        isStorageLow = recorder.isStorageLow
+    }
+
     /// Contoh sesuai layar 02 di Figma, untuk Preview.
     static let preview = RecordingSnapshot(
         title: "Weekly Sync Product",

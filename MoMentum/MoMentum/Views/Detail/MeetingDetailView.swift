@@ -5,6 +5,7 @@ import UIKit
 struct MeetingDetailView: View {
     let meeting: Meeting
 
+    @Environment(MeetingProcessor.self) private var processor
     @State private var tab: DetailTab = .summary
     @State private var momFormat: MoMFormat = .text
     @State private var renaming: SpeakerInfo?
@@ -54,9 +55,8 @@ struct MeetingDetailView: View {
             }
         }
         .sheet(item: $renaming) { speaker in
-            RenameSpeakerSheet(speaker: speaker) { _, _ in
-                // TODO(UI): simpan nama setelah D3 diputuskan (PLAN-logic.md L1.3), lalu generate ulang
-                // ringkasan lewat MeetingProcessor kalau toggle aktif.
+            RenameSpeakerSheet(speaker: speaker) { name, regenerate in
+                rename(speaker, to: name, regenerate: regenerate)
             }
         }
         .sensoryFeedback(.success, trigger: didCopy) { _, new in new }
@@ -65,8 +65,14 @@ struct MeetingDetailView: View {
 
     private func header(_ content: MeetingDetailContent) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            // TODO(UI): tambahkan "Diproses 21 Nov, 16:42" setelah Meeting menyimpan waktu selesai proses.
-            StatusBadge(status: content.status)
+            HStack(spacing: MSpace.xs) {
+                StatusBadge(status: content.status)
+                if let processed = content.processedText {
+                    Text(processed)
+                        .font(.caption)
+                        .foregroundStyle(MColor.n600)
+                }
+            }
             Text(content.title)
                 .font(.title.bold())
                 .foregroundStyle(MColor.n900)
@@ -95,8 +101,7 @@ struct MeetingDetailView: View {
                 }
                 .buttonStyle(.primaryCapsule)
             } else {
-                // TODO(UI): panggil SummaryProvider lewat MeetingProcessor setelah PLAN-logic.md L5–L7 selesai.
-                Button {} label: {
+                Button { processor.regenerateSummary(meeting) } label: {
                     Label("Generate ulang", systemImage: "arrow.triangle.2.circlepath")
                 }
                 .buttonStyle(.secondaryCapsule)
@@ -110,6 +115,22 @@ struct MeetingDetailView: View {
         .glassEffect(.regular, in: .capsule)
         .padding(.horizontal, MSpace.screen)
         .padding(.bottom, MSpace.xs)
+    }
+
+    /// `speaker.label` adalah nama tampil; cari label mentah ("Speaker 2") lewat `Meeting.speakers`.
+    private func rename(_ speaker: SpeakerInfo, to name: String, regenerate: Bool) {
+        guard !name.isEmpty else { return }
+        let target = meeting.speakers.first { meeting.displayName(for: $0.label) == speaker.label }
+        if let target {
+            target.name = name
+        } else {
+            // Meeting lama tanpa model Speaker: buat dari label yang tampil.
+            let created = Speaker(label: speaker.label, name: name)
+            meeting.speakers.append(created)
+        }
+        if regenerate {
+            processor.regenerateSummary(meeting)
+        }
     }
 
     private func copy(_ text: String) {

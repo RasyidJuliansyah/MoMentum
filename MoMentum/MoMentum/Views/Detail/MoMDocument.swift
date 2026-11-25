@@ -8,7 +8,6 @@ struct MoMDocument: Equatable {
     var timeText: String
     var participants: [String]
     var notetaker = "MoMentum"
-    /// TODO(UI): isi dari Meeting setelah sesi Logic menyimpan topik dan keputusan terstruktur (handover 3a).
     var topics: [String] = []
     var decisions: [String] = []
     var actionItems: [ActionItemContent]
@@ -37,6 +36,8 @@ struct MoMDocument: Equatable {
             dateText: content.dateText,
             timeText: Self.timeRange(start: meeting.createdAt, duration: meeting.durationSeconds, timeZone: timeZone),
             participants: content.speakers.map(\.label),
+            topics: meeting.topics,
+            decisions: meeting.decisions,
             actionItems: content.actionItems
         )
     }

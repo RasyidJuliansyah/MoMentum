@@ -138,7 +138,8 @@ final class MeetingProcessor {
             if meeting.processingStep == .uploaded {
                 try await transcribeStep(meeting)
             }
-            if meeting.processingStep == .transcribing {
+            // `.summarizing` tapi belum `.done`: generate ulang yang gagal lalu dicoba lagi.
+            if meeting.processingStep == .transcribing || meeting.processingStep == .summarizing {
                 try await summarizeStep(meeting)
             }
         } catch {
@@ -251,6 +252,12 @@ final class MeetingProcessor {
         case SummaryError.invalidResponse(let message):
             meeting.lastErrorKind = .vendor
             meeting.lastErrorMessage = message
+        case AudioMergerError.noSegments:
+            meeting.lastErrorKind = .unknown
+            meeting.lastErrorMessage = "Rekaman kosong, tidak ada audio yang bisa diproses. Cek izin mikrofon lalu rekam ulang."
+        case AudioMergerError.exportFailed(let message):
+            meeting.lastErrorKind = .unknown
+            meeting.lastErrorMessage = "File rekaman gagal digabung: \(message)"
         default:
             meeting.lastErrorKind = .unknown
             meeting.lastErrorMessage = "Terjadi kesalahan tak terduga. Coba lagi."

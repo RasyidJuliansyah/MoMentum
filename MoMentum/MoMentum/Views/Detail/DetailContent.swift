@@ -57,6 +57,8 @@ struct MeetingDetailContent: Equatable {
     var actionItems: [ActionItemContent]
     var speakers: [SpeakerInfo]
     var transcript: [TranscriptLine]
+    /// "Diproses 21 Nov 16.42", `nil` kalau belum pernah selesai diproses.
+    var processedText: String?
 
     var participantCount: Int { speakers.count }
 
@@ -75,10 +77,14 @@ struct MeetingDetailContent: Equatable {
             .sorted { $0.startedAt < $1.startedAt }
             .flatMap { $0.utterances.sorted { $0.startMs < $1.startMs } }
         transcript = utterances.enumerated().map { index, utterance in
-            TranscriptLine(id: index, speakerLabel: utterance.speakerLabel, startMs: utterance.startMs, text: utterance.text)
+            // Nama dari `Speaker` (diganti user) kalau ada, selain itu label "Speaker 1".
+            TranscriptLine(id: index, speakerLabel: meeting.displayName(for: utterance.speakerLabel), startMs: utterance.startMs, text: utterance.text)
         }
         speakers = Self.speakers(from: transcript)
-        actionItems = meeting.actionItems.map { ActionItemContent(item: $0) }
+        actionItems = meeting.actionItems.sorted { $0.order < $1.order }.map { ActionItemContent(item: $0) }
+        processedText = meeting.processedAt.map {
+            "Diproses " + $0.formatted(.dateTime.day().month(.abbreviated).hour().minute().locale(Locale(identifier: "id_ID")))
+        }
     }
 
     /// Speaker urut kemunculan. Warna avatar (`order`) hanya dihitung di antara speaker bernama,

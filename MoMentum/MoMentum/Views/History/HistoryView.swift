@@ -6,6 +6,7 @@ struct HistoryView: View {
     var onStartRecording: () -> Void = {}
 
     @Query(sort: \Meeting.createdAt, order: .reverse) private var meetings: [Meeting]
+    @Environment(MeetingProcessor.self) private var processor
     @State private var filter: HistoryFilter = .all
     @State private var query = ""
 
@@ -69,7 +70,7 @@ struct HistoryView: View {
     }
 
     private func card(for meeting: Meeting) -> some View {
-        let content = MeetingCardContent(meeting: meeting)
+        let content = MeetingCardContent(meeting: meeting, liveProgress: processor.progressByMeetingID[meeting.persistentModelID])
         return NavigationLink(value: meeting) {
             MeetingCard(content: content, onRetry: { retry(meeting) })
         }
@@ -101,7 +102,7 @@ struct HistoryView: View {
     }
 
     private func retry(_ meeting: Meeting) {
-        // TODO(UI): panggil MeetingProcessor.retry(_:) setelah tersedia (PLAN-logic.md L6.3).
+        processor.retry(meeting)
     }
 }
 

@@ -66,6 +66,28 @@ final class ProcessingPresentationTests: XCTestCase {
         XCTAssertEqual(ProcessingContent(meeting: meeting).steps[0].subtitle, "5 segmen di iPhone")
     }
 
+    func testStepAndErrorComeFromMeeting() throws {
+        let container = try ModelContainer(for: Meeting.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let meeting = Meeting(title: "Weekly", status: .processing)
+        container.mainContext.insert(meeting)
+        meeting.processingStep = .uploaded
+
+        let running = ProcessingContent(meeting: meeting)
+        XCTAssertEqual(running.currentStepIndex, 2, "Terunggah selesai → sedang transkripsi")
+        XCTAssertEqual(running.progress, 0.5)
+        XCTAssertEqual(ProcessingContent(meeting: meeting, liveProgress: 0.62).percentText, "62%")
+
+        meeting.status = .failed
+        meeting.lastErrorMessage = "API key belum diisi atau tidak valid."
+        let failed = ProcessingContent(meeting: meeting)
+        XCTAssertEqual(failed.errorTitle, "Transkripsi gagal")
+        XCTAssertEqual(failed.errorMessage, "API key belum diisi atau tidak valid.")
+
+        meeting.status = .recorded
+        meeting.processingStep = nil
+        XCTAssertNil(ProcessingContent(meeting: meeting).currentStepIndex)
+    }
+
     // MARK: Format
 
     func testStorageFormatUsesIndonesianDecimalComma() {

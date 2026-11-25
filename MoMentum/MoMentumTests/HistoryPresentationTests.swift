@@ -59,6 +59,17 @@ final class HistoryPresentationTests: XCTestCase {
         XCTAssertNotNil(failed.note)
     }
 
+    func testCardShowsStepProgressAndErrorMessage() {
+        let processing = meeting("D", day: 24, status: .processing)
+        processing.processingStep = .uploaded
+        let card = MeetingCardContent(meeting: processing, liveProgress: 0.62)
+        XCTAssertEqual(card.progress?.label, "Transkripsi & pemisahan speaker · 62%")
+
+        let failed = meeting("E", day: 24, status: .failed)
+        failed.lastErrorMessage = "Ringkasan gagal (500): overloaded"
+        XCTAssertEqual(MeetingCardContent(meeting: failed).note?.text, "Ringkasan gagal (500): overloaded")
+    }
+
     // MARK: HistoryFilter
 
     func testFilterInProgressCoversUnfinishedStatuses() {

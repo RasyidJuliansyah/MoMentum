@@ -81,7 +81,9 @@ final class AudioRecorder: NSObject {
     // MARK: - Aksi dipanggil UI
 
     func start(title: String, agenda: String?, glossaryTerms: [String]) {
-        guard state == .idle else { return }
+        // `.finished`: instance yang sama dipakai lagi untuk rekaman berikutnya (satu AudioRecorder per app).
+        guard state == .idle || state == .finished else { return }
+        activateSession()
         let newMeeting = Meeting(title: title)
         newMeeting.agenda = agenda
         newMeeting.glossaryTerms = glossaryTerms
@@ -112,6 +114,8 @@ final class AudioRecorder: NSObject {
 
     func resume() {
         guard state.isPaused else { return }
+        // Setelah telepon, iOS menonaktifkan sesi audio; aktifkan lagi sebelum segmen baru.
+        activateSession()
         startSegment()
         state = .recording
         startTimers()
@@ -128,6 +132,16 @@ final class AudioRecorder: NSObject {
         meeting?.durationSeconds = elapsed
         meeting?.endedAt = .now
         state = .finished
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+    }
+
+    /// Tanpa kategori rekam, `AVAudioRecorder.record()` gagal diam-diam di perangkat (kategori default
+    /// `.soloAmbient` tidak boleh merekam). Mode background `audio` di Info.plist membuat rekaman tetap
+    /// jalan saat layar terkunci, selama sesi ini aktif.
+    private func activateSession() {
+        let session = AVAudioSession.sharedInstance()
+        try? session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
+        try? session.setActive(true)
     }
 
     // MARK: - Internal
@@ -151,8 +165,7 @@ final class AudioRecorder: NSObject {
             let newRecorder = try AVAudioRecorder(url: url, settings: settings)
             newRecorder.delegate = self
             newRecorder.isMeteringEnabled = true
-            newRecorder.record()
-            recorder = newRecorder
+            recorder = newRecorder.record() ? newRecorder : nil
         } catch {
             recorder = nil
         }

@@ -101,20 +101,37 @@ struct ProcessingContent: Equatable {
         }
     }
 
-    init(meeting: Meeting) {
+    /// - Parameter liveProgress: progres dari `MeetingProcessor` kalau meeting ini sedang diproses.
+    init(meeting: Meeting, liveProgress: Double? = nil) {
         var subtitles: [Int: String] = [:]
         if !meeting.segments.isEmpty {
             subtitles[0] = "\(meeting.segments.count) segmen di iPhone"
         }
-        // TODO(UI): isi currentStepIndex, progress, dan errorMessage dari Meeting setelah
-        // PLAN-logic.md L1.2 menambahkan langkah proses dan error terakhir.
+        let stepIndex = Self.currentStepIndex(for: meeting)
         self.init(
             title: meeting.title,
             meta: MeetingCardContent.meta(for: meeting, includeYear: true),
             status: meeting.status,
+            currentStepIndex: stepIndex,
+            progress: liveProgress ?? stepIndex.map { Double($0) / Double(Self.stepTitles.count) },
             stepSubtitles: subtitles,
-            errorMessage: meeting.status == .failed ? "Ada kendala saat memproses meeting ini." : nil
+            errorMessage: meeting.status == .failed
+                ? (meeting.lastErrorMessage ?? "Ada kendala saat memproses meeting ini.")
+                : nil
         )
+    }
+
+    /// `Meeting.processingStep` adalah langkah terakhir yang SUDAH selesai, jadi langkah yang sedang
+    /// berjalan (atau yang gagal) adalah langkah sesudahnya. Rekaman yang belum pernah diproses: `nil`.
+    static func currentStepIndex(for meeting: Meeting) -> Int? {
+        switch meeting.processingStep {
+        // Belum pernah mulai, atau data lama tanpa info langkah: jangan menebak langkah mana.
+        case nil: nil
+        case .saved: 1
+        case .uploaded: 2
+        case .transcribing: 3
+        case .summarizing: meeting.status == .done ? nil : 3
+        }
     }
 }
 

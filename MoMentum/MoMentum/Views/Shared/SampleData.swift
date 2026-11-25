@@ -29,6 +29,8 @@ extension Meeting {
         func make(_ title: String, daysAgo: Int, minutes: Int, status: MeetingStatus, segments: Int, transcribed: Int) -> Meeting {
             let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: now) ?? now
             let meeting = Meeting(title: title, createdAt: date, status: status)
+            // Rekaman contoh sudah ditutup rapi; tanpa ini `AudioRecorder` menganggapnya rekaman yang terputus.
+            meeting.endedAt = date.addingTimeInterval(TimeInterval(minutes * 60))
             meeting.durationSeconds = TimeInterval(minutes * 60)
             for index in 0..<segments {
                 let segment = Segment(

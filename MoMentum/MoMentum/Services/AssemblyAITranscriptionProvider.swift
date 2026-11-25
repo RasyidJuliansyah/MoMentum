@@ -55,6 +55,9 @@ final class AssemblyAITranscriptionProvider: TranscriptionProvider {
     private func createTranscript(audioURL: String, options: TranscriptionOptions, apiKey: String) async throws -> String {
         var body: [String: Any] = [
             "audio_url": audioURL,
+            // Bahasa Indonesia hanya didukung universal-2 (model terbaru belum). Model ditulis jelas
+            // karena default vendor bisa berbeda antar akun: https://www.assemblyai.com/llms/models.md
+            "speech_models": ["universal-2"],
             "speaker_labels": true,
             "language_code": options.languageCode,
         ]

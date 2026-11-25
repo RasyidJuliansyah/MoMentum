@@ -19,7 +19,7 @@ struct MeetingCardContent: Equatable {
     var progress: ProgressInfo?
     var showsRetry = false
 
-    init(meeting: Meeting) {
+    init(meeting: Meeting, liveProgress: Double? = nil) {
         title = meeting.title
         status = meeting.status
         meta = Self.meta(for: meeting)
@@ -30,12 +30,17 @@ struct MeetingCardContent: Equatable {
         case .queued:
             note = Note(systemImage: "exclamationmark.triangle", text: "Diproses otomatis begitu ada internet")
         case .processing:
-            // TODO(UI): tampilkan bar progres dan nama langkah setelah `Meeting.processingStep`
-            // tersedia (PLAN-logic.md L1.2), misalnya "Transkripsi & pemisahan speaker · 62%".
-            note = Note(systemImage: "sparkles", text: "Transkrip dan ringkasan sedang dibuat")
+            if let index = ProcessingContent.currentStepIndex(for: meeting) {
+                let fraction = liveProgress ?? Double(index) / Double(ProcessingContent.stepTitles.count)
+                progress = ProgressInfo(
+                    fraction: fraction,
+                    label: "\(ProcessingContent.stepTitles[index]) · \(Int((fraction * 100).rounded()))%"
+                )
+            } else {
+                note = Note(systemImage: "sparkles", text: "Transkrip dan ringkasan sedang dibuat")
+            }
         case .failed:
-            // TODO(UI): pakai `Meeting.lastErrorMessage` setelah tersedia (PLAN-logic.md L1.2).
-            note = Note(systemImage: "exclamationmark.triangle", text: "Proses gagal")
+            note = Note(systemImage: "exclamationmark.triangle", text: meeting.lastErrorMessage ?? "Proses gagal")
             showsRetry = true
         case .done:
             note = nil
