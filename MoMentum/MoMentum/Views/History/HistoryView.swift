@@ -9,6 +9,8 @@ struct HistoryView: View {
     @Environment(MeetingProcessor.self) private var processor
     @State private var filter: HistoryFilter = .all
     @State private var query = ""
+    @State private var pendingDelete: Meeting?
+    @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         NavigationStack {
@@ -32,6 +34,19 @@ struct HistoryView: View {
                 MeetingDestinationView(meeting: meeting)
             }
             .screenBackground(MBackground.light)
+            .alert(
+                "Hapus meeting ini?",
+                isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),
+                presenting: pendingDelete
+            ) { meeting in
+                Button("Hapus", role: .destructive) {
+                    MeetingDeleter.delete(meeting, in: modelContext)
+                    pendingDelete = nil
+                }
+                Button("Batal", role: .cancel) { pendingDelete = nil }
+            } message: { meeting in
+                Text("\"\(meeting.title)\" dan rekamannya di iPhone akan dihapus permanen.")
+            }
         }
     }
 
@@ -72,12 +87,19 @@ struct HistoryView: View {
     private func card(for meeting: Meeting) -> some View {
         let content = MeetingCardContent(meeting: meeting, liveProgress: processor.progressByMeetingID[meeting.persistentModelID])
         return NavigationLink(value: meeting) {
-            MeetingCard(content: content, onRetry: { retry(meeting) })
+            MeetingCard(content: content, onRetry: { retry(meeting) }, onDelete: { pendingDelete = meeting })
         }
         .buttonStyle(.plain)
+        .contextMenu {
+            if content.showsRetry {
+                Button("Coba lagi", systemImage: "arrow.clockwise") { retry(meeting) }
+                Button("Hapus", systemImage: "trash", role: .destructive) { pendingDelete = meeting }
+            }
+        }
         .accessibilityActions {
             if content.showsRetry {
                 Button("Coba lagi") { retry(meeting) }
+                Button("Hapus") { pendingDelete = meeting }
             }
         }
     }

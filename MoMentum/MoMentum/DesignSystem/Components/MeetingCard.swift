@@ -5,6 +5,7 @@ import SwiftUI
 struct MeetingCard: View {
     let content: MeetingCardContent
     var onRetry: () -> Void = {}
+    var onDelete: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: MSpace.sm) {
@@ -39,15 +40,27 @@ struct MeetingCard: View {
                 }
             }
 
-            if content.note != nil || content.showsRetry {
-                HStack(spacing: MSpace.xs) {
+            if content.showsRetry {
+                // Meeting gagal: pesan error di baris sendiri (bisa panjang), tombol di bawahnya.
+                VStack(alignment: .leading, spacing: MSpace.xs) {
                     if let note = content.note {
                         Label(note.text, systemImage: note.systemImage)
                             .font(.footnote)
                             .foregroundStyle(MColor.n600)
+                            .lineLimit(3)
                     }
-                    Spacer(minLength: 0)
-                    if content.showsRetry {
+                    HStack(spacing: MSpace.xs) {
+                        Spacer(minLength: 0)
+                        Button(action: onDelete) {
+                            Label("Hapus", systemImage: "trash")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(MColor.danger)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 9)
+                                .background(MColor.n0, in: .capsule)
+                                .overlay(Capsule().strokeBorder(MColor.n200))
+                        }
+                        .buttonStyle(.plain)
                         Button(action: onRetry) {
                             Label("Coba lagi", systemImage: "arrow.clockwise")
                                 .font(.subheadline.weight(.semibold))
@@ -59,9 +72,18 @@ struct MeetingCard: View {
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(.horizontal, content.showsRetry ? 0 : MSpace.sm)
-                .padding(.vertical, content.showsRetry ? 0 : 10)
-                .background(content.showsRetry ? Color.clear : MColor.n50, in: .rect(cornerRadius: MRadius.sm))
+            } else if content.note != nil {
+                HStack(spacing: MSpace.xs) {
+                    if let note = content.note {
+                        Label(note.text, systemImage: note.systemImage)
+                            .font(.footnote)
+                            .foregroundStyle(MColor.n600)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, MSpace.sm)
+                .padding(.vertical, 10)
+                .background(MColor.n50, in: .rect(cornerRadius: MRadius.sm))
             }
         }
         .padding(14)

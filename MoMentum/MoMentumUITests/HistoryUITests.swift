@@ -20,6 +20,22 @@ final class HistoryUITests: XCTestCase {
     }
 
     @MainActor
+    func testDeleteFailedMeeting() throws {
+        let app = launch(seed: "sample")
+        app.tabBars.buttons["Riwayat"].tap()
+
+        let sprint = card(app, "Sprint Planning S24")
+        XCTAssertTrue(sprint.waitForExistence(timeout: 5))
+        app.buttons["Hapus"].firstMatch.tap()
+        XCTAssertTrue(app.staticTexts["Hapus meeting ini?"].waitForExistence(timeout: 3))
+        attach(app, "04-hapus-konfirmasi")
+
+        app.alerts.buttons["Hapus"].tap()
+        XCTAssertFalse(card(app, "Sprint Planning S24").waitForExistence(timeout: 2), "Meeting gagal harus hilang dari Riwayat")
+        XCTAssertTrue(card(app, "Weekly Sync Product").exists, "Meeting lain tetap ada")
+    }
+
+    @MainActor
     func testHistoryListFilterAndOpenMeeting() throws {
         let app = launch(seed: "sample")
         app.tabBars.buttons["Riwayat"].tap()
