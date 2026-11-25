@@ -9,7 +9,8 @@ struct RecordingScreen: View {
     var onTogglePause: () -> Void = {}
     var onStop: () -> Void = {}
 
-    private let waveformHalf = 28
+    /// Jumlah bar gelombang, ±11 detik suara terakhir (5 level per detik).
+    private let waveformBarCount = 56
 
     var body: some View {
         VStack(spacing: 0) {
@@ -140,20 +141,17 @@ struct RecordingScreen: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// Kiri: level terbaru (penuh). Kanan: bar pudar sebagai sisa. Garis putih = posisi sekarang.
+    /// Seluruh lebar = level suara asli, terbaru di kanan lalu bergeser ke kiri (±11 detik terakhir).
+    /// Sebelum cukup data, sisi kiri diisi bar minimum (hening).
     private var liveWaveform: some View {
-        let recent = Array(snapshot.levels.suffix(waveformHalf))
-        let padded = Array(repeating: 0.06, count: waveformHalf - recent.count) + recent
-        let tail = WaveformView.decorativeLevels(count: waveformHalf, seed: 7).map { $0 * 0.8 }
-        return ZStack {
-            WaveformView(levels: padded + tail, progress: 0.5, color: MColor.n0, barWidth: 3, spacing: 4)
-                .frame(height: 104)
-            Capsule()
-                .fill(MColor.n0)
-                .frame(width: 2, height: 128)
-        }
-        .opacity(snapshot.isRecording ? 1 : 0.6)
-        .accessibilityHidden(true)
+        let count = waveformBarCount
+        let recent = Array(snapshot.levels.suffix(count))
+        let padded = Array(repeating: 0.0, count: count - recent.count) + recent
+        return WaveformView(levels: padded, progress: 1, color: MColor.n0, barWidth: 3, spacing: 4)
+            .frame(height: 104)
+            .frame(height: 128)
+            .opacity(snapshot.isRecording ? 1 : 0.6)
+            .accessibilityHidden(true)
     }
 
     private var footer: some View {
