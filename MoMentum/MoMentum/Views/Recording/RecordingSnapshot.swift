@@ -30,6 +30,19 @@ struct RecordingSnapshot: Equatable {
     var isStorageLow = false
 
     var isRecording: Bool { phase == .recording }
+
+    /// Level per detik dari `AudioRecorder` (tick 0,2 detik).
+    static let levelsPerSecond = 5
+    /// Lama hening total sebelum peringatan muncul.
+    static let silenceWarningSeconds = 3
+
+    /// Mikrofon hanya mengirim hening digital (level 0 = -60 dB ke bawah; iOS mengirim -120 dB) selama
+    /// beberapa detik. Ruangan sepi pun biasanya masih -50 dB, jadi ini tanda iOS memblokir mikrofon:
+    /// iPhone sedang di-mirror ke Mac (iPhone Mirroring), terkunci saat mulai merekam, atau perekam gagal.
+    var isInputSilent: Bool {
+        let window = Self.levelsPerSecond * Self.silenceWarningSeconds
+        return isRecording && levels.count >= window && levels.suffix(window).allSatisfy { $0 < 0.01 }
+    }
 }
 
 extension RecordingSnapshot {

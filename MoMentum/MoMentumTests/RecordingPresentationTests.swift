@@ -53,4 +53,22 @@ final class RecordingPresentationTests: XCTestCase {
         XCTAssertNil(MeetingContextDraft(agenda: "  ").trimmedAgenda)
         XCTAssertEqual(MeetingContextDraft(agenda: " Review sprint ").trimmedAgenda, "Review sprint")
     }
+
+    // MARK: Peringatan mikrofon hening
+
+    func testSilentInputWarningAfterThreeSecondsOfDigitalSilence() {
+        var snapshot = RecordingSnapshot(title: "Tes", agenda: nil)
+        snapshot.levels = Array(repeating: 0, count: 14)
+        XCTAssertFalse(snapshot.isInputSilent, "Belum 3 detik")
+
+        snapshot.levels = Array(repeating: 0, count: 15)
+        XCTAssertTrue(snapshot.isInputSilent, "3 detik hening total (iPhone Mirroring / terkunci)")
+
+        snapshot.levels = Array(repeating: 0, count: 14) + [0.17]
+        XCTAssertFalse(snapshot.isInputSilent, "Ruangan sepi (-50 dB) bukan hening digital")
+
+        snapshot.levels = Array(repeating: 0, count: 15)
+        snapshot.phase = .paused(.user)
+        XCTAssertFalse(snapshot.isInputSilent, "Saat dijeda tidak perlu peringatan")
+    }
 }

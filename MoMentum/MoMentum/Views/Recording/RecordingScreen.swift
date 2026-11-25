@@ -53,6 +53,13 @@ struct RecordingScreen: View {
                 title: "Dijeda karena telepon masuk",
                 message: "Rekaman lanjut otomatis setelah panggilan selesai."
             )
+        } else if snapshot.isInputSilent {
+            StatusBanner(
+                kind: .danger,
+                systemImage: "mic.slash.fill",
+                title: "Mikrofon tidak menangkap suara",
+                message: "Buka MoMentum langsung di iPhone (bukan lewat iPhone Mirroring) dan pastikan layar tidak terkunci saat mulai merekam."
+            )
         } else if snapshot.isStorageLow {
             StatusBanner(
                 kind: .danger,
