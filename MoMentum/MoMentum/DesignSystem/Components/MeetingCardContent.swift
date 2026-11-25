@@ -18,6 +18,10 @@ struct MeetingCardContent: Equatable {
     var note: Note?
     var progress: ProgressInfo?
     var showsRetry = false
+    /// Tombol Hapus di kartu: rekaman yang belum diproses dan yang gagal.
+    var showsDelete: Bool { status == .recorded || status == .failed }
+    /// Hapus lewat tekan lama: semua kecuali yang sedang diproses (proses bisa rusak di tengah jalan).
+    var canDelete: Bool { status != .processing }
 
     init(meeting: Meeting, liveProgress: Double? = nil) {
         title = meeting.title

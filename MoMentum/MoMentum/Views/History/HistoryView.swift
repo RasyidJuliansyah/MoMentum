@@ -93,12 +93,16 @@ struct HistoryView: View {
         .contextMenu {
             if content.showsRetry {
                 Button("Coba lagi", systemImage: "arrow.clockwise") { retry(meeting) }
+            }
+            if content.canDelete {
                 Button("Hapus", systemImage: "trash", role: .destructive) { pendingDelete = meeting }
             }
         }
         .accessibilityActions {
             if content.showsRetry {
                 Button("Coba lagi") { retry(meeting) }
+            }
+            if content.canDelete {
                 Button("Hapus") { pendingDelete = meeting }
             }
         }

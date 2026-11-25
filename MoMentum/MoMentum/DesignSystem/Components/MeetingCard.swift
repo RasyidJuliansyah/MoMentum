@@ -40,8 +40,8 @@ struct MeetingCard: View {
                 }
             }
 
-            if content.showsRetry {
-                // Meeting gagal: pesan error di baris sendiri (bisa panjang), tombol di bawahnya.
+            if content.showsDelete {
+                // Rekaman belum diproses / gagal: catatan di baris sendiri (pesan error bisa panjang), tombol di bawahnya.
                 VStack(alignment: .leading, spacing: MSpace.xs) {
                     if let note = content.note {
                         Label(note.text, systemImage: note.systemImage)
@@ -61,15 +61,17 @@ struct MeetingCard: View {
                                 .overlay(Capsule().strokeBorder(MColor.n200))
                         }
                         .buttonStyle(.plain)
-                        Button(action: onRetry) {
-                            Label("Coba lagi", systemImage: "arrow.clockwise")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(MColor.n0)
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 9)
-                                .background(MColor.n900, in: .capsule)
+                        if content.showsRetry {
+                            Button(action: onRetry) {
+                                Label("Coba lagi", systemImage: "arrow.clockwise")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(MColor.n0)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 9)
+                                    .background(MColor.n900, in: .capsule)
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             } else if content.note != nil {

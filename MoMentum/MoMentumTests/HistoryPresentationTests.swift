@@ -59,6 +59,16 @@ final class HistoryPresentationTests: XCTestCase {
         XCTAssertNotNil(failed.note)
     }
 
+    func testDeleteAvailabilityPerStatus() {
+        let recorded = MeetingCardContent(meeting: meeting("R", day: 24, status: .recorded))
+        XCTAssertTrue(recorded.showsDelete, "Rekaman belum diproses punya tombol Hapus")
+        XCTAssertFalse(recorded.showsRetry)
+        XCTAssertTrue(MeetingCardContent(meeting: meeting("F", day: 24, status: .failed)).showsDelete)
+        XCTAssertFalse(MeetingCardContent(meeting: meeting("D", day: 24, status: .done)).showsDelete)
+        XCTAssertTrue(MeetingCardContent(meeting: meeting("D", day: 24, status: .done)).canDelete, "Selesai: hapus lewat tekan lama")
+        XCTAssertFalse(MeetingCardContent(meeting: meeting("P", day: 24, status: .processing)).canDelete, "Sedang diproses tidak boleh dihapus")
+    }
+
     func testCardShowsStepProgressAndErrorMessage() {
         let processing = meeting("D", day: 24, status: .processing)
         processing.processingStep = .uploaded
