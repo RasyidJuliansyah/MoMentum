@@ -70,7 +70,8 @@ struct RecordingView: View {
 
     private func start() async {
         guard recorder.state == .idle || recorder.state == .finished else { return }
-        guard await Self.hasMicrophonePermission() else {
+        // Cadangan: tombol rekam sudah mengecek izin (`MainTabView.startRecording`).
+        guard await MicrophonePermission.ensureGranted() else {
             isMicrophoneDenied = true
             return
         }
@@ -79,19 +80,6 @@ struct RecordingView: View {
             agenda: draft.trimmedAgenda,
             glossaryTerms: draft.terms
         )
-    }
-
-    private static func hasMicrophonePermission() async -> Bool {
-        #if DEBUG
-        // UI test di simulator: dialog izin sistem akan menutupi layar. Tanpa izin, perekam tetap
-        // jalan (merekam hening), cukup untuk menguji alur.
-        if UITestSupport.requestedSeed != nil { return true }
-        #endif
-        switch AVAudioApplication.shared.recordPermission {
-        case .granted: return true
-        case .denied: return false
-        default: return await AVAudioApplication.requestRecordPermission()
-        }
     }
 
     private func togglePause() {

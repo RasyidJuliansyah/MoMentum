@@ -4,6 +4,8 @@ import UIKit
 
 /// Layar 11 Onboarding · Izin mikrofon (Figma node 18:471).
 struct OnboardingMicView: View {
+    /// Titik halaman hanya saat bagian dari onboarding 2 langkah, bukan saat muncul sendiri.
+    var showsPageDots = true
     let onFinish: () -> Void
 
     @Environment(\.openURL) private var openURL
@@ -63,10 +65,12 @@ struct OnboardingMicView: View {
             .padding(.bottom, MSpace.xs)
         }
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                PageDots(count: 2, current: 1)
+            if showsPageDots {
+                ToolbarItem(placement: .topBarTrailing) {
+                    PageDots(count: 2, current: 1)
+                }
+                .sharedBackgroundVisibility(.hidden)
             }
-            .sharedBackgroundVisibility(.hidden)
         }
         .screenBackground(MBackground.deep)
     }
